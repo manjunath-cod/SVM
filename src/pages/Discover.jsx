@@ -43,7 +43,7 @@ export function Discover({ onNavigate }) {
         type: res.registered ? 'success' : 'info',
         title: res.registered ? 'Registered!' : 'Cancelled',
         message: res.registered
-          ? `You are now registered for "${title}". Details saved to your Creative Passport.`
+          ? `You are now registered for "${title}". Details saved to your profile.`
           : `Registration for "${title}" has been cancelled.`
       });
       loadOpportunities();
@@ -68,14 +68,6 @@ export function Discover({ onNavigate }) {
           </>
         }
         copy="Workshops, open auditions, collaborative sprints, and creative challenges across SVM Institute of Technology. Beginner-friendly and no prerequisites required."
-        action={
-          <button
-            className="button button-dark"
-            onClick={() => onNavigate('passport')}
-          >
-            <Icon name="compass" size={16} /> My Passport Interests
-          </button>
-        }
       />
 
       {toast && <Toast toast={toast} onClose={() => setToast(null)} />}

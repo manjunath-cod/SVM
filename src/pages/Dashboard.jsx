@@ -3,10 +3,9 @@ import { Icon } from '../components/Icons.jsx';
 import { api } from '../services/api.js';
 
 export function Dashboard({ onNavigate, currentUser }) {
-  const [passport, setPassport] = useState(null);
   const [opportunities, setOpportunities] = useState([]);
   const [events, setEvents] = useState([]);
-  const [achievements, setAchievements] = useState(null);
+  const [userSubmissions, setUserSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,16 +15,14 @@ export function Dashboard({ onNavigate, currentUser }) {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [passData, oppData, evtData, achData] = await Promise.all([
-        api.getPassport().catch(() => null),
+      const [submissionData, oppData, evtData] = await Promise.all([
+        api.getSubmissions().catch(() => ({ submissions: [] })),
         api.getOpportunities().catch(() => ({ opportunities: [] })),
-        api.getEvents().catch(() => ({ events: [] })),
-        api.getAchievements().catch(() => null)
+        api.getEvents().catch(() => ({ events: [] }))
       ]);
-      setPassport(passData);
+      setUserSubmissions(submissionData?.submissions || []);
       setOpportunities(oppData?.opportunities || []);
       setEvents(evtData?.events || []);
-      setAchievements(achData);
     } catch (err) {
       console.warn('Dashboard data fetch error:', err);
     } finally {
@@ -39,10 +36,6 @@ export function Dashboard({ onNavigate, currentUser }) {
     month: 'long',
     year: 'numeric'
   }).format(new Date());
-
-  const completionPct = passport?.completionPercentage || 45;
-  const userInterests = passport?.interests?.map((i) => i.category) || ['photography', 'music', 'writing'];
-  const userSubmissions = passport?.submissions || [];
 
   return (
     <div className="dashboard-page">
@@ -66,41 +59,12 @@ export function Dashboard({ onNavigate, currentUser }) {
               <strong>{userSubmissions.length}</strong>
               <span>Works shared</span>
             </div>
-            <div>
-              <strong>{completionPct}%</strong>
-              <span>Passport ready</span>
-            </div>
           </div>
         </div>
       </section>
 
       {/* Top 2 Action Cards */}
       <div className="dashboard-grid">
-        {/* Creative Passport Summary Card */}
-        <section className="app-panel passport-summary">
-          <div className="panel-heading">
-            <div>
-              <p className="eyebrow">Your Creative Passport</p>
-              <h2>Keep exploring what makes you, <em>you.</em></h2>
-            </div>
-            <span className="completion">{completionPct}% complete</span>
-          </div>
-
-          <div className="progress-track">
-            <span style={{ width: `${completionPct}%` }} />
-          </div>
-
-          <div className="passport-tags">
-            {userInterests.map((interest) => (
-              <span key={interest}>{interest}</span>
-            ))}
-          </div>
-
-          <button className="text-link" onClick={() => onNavigate('passport')}>
-            Manage Creative Passport <Icon name="arrow" size={16} />
-          </button>
-        </section>
-
         {/* Continue Your Journey Card */}
         <section className="app-panel journey-card">
           <p className="eyebrow">Student Talent Community</p>
@@ -116,39 +80,6 @@ export function Dashboard({ onNavigate, currentUser }) {
           </button>
         </section>
       </div>
-
-      {/* Achievement Crests Spotlight */}
-      <section className="app-panel dashboard-achievements-panel">
-        <div className="section-title-row">
-          <div>
-            <p className="eyebrow">SVM Official Achievements</p>
-            <h2>My Creative Badges ({achievements?.summary?.badgesEarned || 0} / 12 Earned)</h2>
-          </div>
-          <button className="text-link" onClick={() => onNavigate('achievements')}>
-            Open Achievement Showcase <Icon name="arrow" size={15} />
-          </button>
-        </div>
-        <div className="dash-badges-row">
-          {(achievements?.badges || []).slice(0, 6).map((badge) => (
-            <div
-              key={badge.id}
-              className={`dash-badge-item ${badge.unlocked ? 'is-earned' : 'is-locked'}`}
-              onClick={() => onNavigate('achievements')}
-              role="button"
-              tabIndex={0}
-              title={`${badge.name} · ${badge.unlocked ? 'Earned' : 'Locked milestone'}`}
-            >
-              <img
-                src={badge.image}
-                alt={badge.name}
-                className={`dash-badge-thumbnail ${badge.unlocked ? 'shine' : 'grayscale'}`}
-              />
-              <span className="dash-badge-title">{badge.name}</span>
-              <span className="dash-badge-status">{badge.unlocked ? 'Earned' : `${badge.progress}%`}</span>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* Recommended Opportunities Section */}
       <section className="app-section">

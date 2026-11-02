@@ -10,7 +10,7 @@ const defaultEvents = [
   { date: '08', month: 'JAN', title: 'Create Together', meta: 'Innovation Lab · 4:00 PM', type: 'Workshop' },
 ];
 
-export function LandingPage({ onExplore }) {
+export function LandingPage({ onExplore, onJoin }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const [selected, setSelected] = useState([]);
@@ -23,9 +23,18 @@ export function LandingPage({ onExplore }) {
     );
   };
 
-  const handleJoinSubmit = (e) => {
+  const handleJoinSubmit = async (e) => {
     e.preventDefault();
-    setJoinSubmitted(true);
+    if (!onJoin) {
+      setJoinSubmitted(true);
+      return;
+    }
+
+    await onJoin(joinEmail.trim());
+  };
+
+  const handleDirectJoin = () => {
+    onJoin?.('student@svmit.ac.in');
   };
 
   return (
@@ -36,13 +45,12 @@ export function LandingPage({ onExplore }) {
           <nav className={menuOpen ? 'nav-links is-open' : 'nav-links'} aria-label="Main navigation">
             <a href="#discover" onClick={() => setMenuOpen(false)}>Discover</a>
             <a href="#opportunities" onClick={() => setMenuOpen(false)}>Opportunities</a>
-            <a href="#showcase" onClick={() => setMenuOpen(false)}>Showcase</a>
             <a href="#about" onClick={() => setMenuOpen(false)}>About SVM</a>
             <div className="mobile-nav-action">
               <button
                 className="button button-dark"
                 onClick={() => {
-                  setJoinOpen(true);
+                  handleDirectJoin();
                   setMenuOpen(false);
                 }}
               >
@@ -51,8 +59,7 @@ export function LandingPage({ onExplore }) {
             </div>
           </nav>
           <div className="header-actions">
-            <a className="sign-in" href="#signin">Student Portal</a>
-            <button className="button button-dark header-cta" onClick={() => setJoinOpen(true)}>
+            <button className="button button-dark header-cta" onClick={handleDirectJoin}>
               Join SVM <Icon name="arrow" size={16} />
             </button>
             <button
@@ -208,23 +215,16 @@ export function LandingPage({ onExplore }) {
               </a>
             </div>
 
-            <div className="showcase-grid">
+            <div className="showcase-grid showcase-media-grid">
               <article className="story-card story-feature">
-                <div className="story-visual visual-purple">
+                <div className="story-visual media-visual">
+                  <img src="/assets/cultureloop-festival.jpg" alt="Students celebrating at the SVM Youth Festival" />
                   <span className="story-stamp">SVM / 2026</span>
-                  <div className="visual-type">
-                    CREATE
-                    <br />
-                    <i>OUT LOUD</i>
-                  </div>
-                  <span className="story-play">
-                    <Icon name="play" size={19} />
-                  </span>
                 </div>
                 <div className="story-meta">
                   <div>
-                    <p className="story-category">FILMMAKING · AARAV S.</p>
-                    <h3>Finding the frame between moments.</h3>
+                    <p className="story-category">CAMPUS LIFE · SVM YOUTH FESTIVAL</p>
+                    <h3>One campus, many ways to shine.</h3>
                   </div>
                   <span className="story-arrow">
                     <Icon name="arrow" size={17} />
@@ -233,24 +233,49 @@ export function LandingPage({ onExplore }) {
               </article>
 
               <article className="story-card">
-                <div className="story-visual visual-coral">
-                  <span className="story-stamp">STUDIO NOTES</span>
-                  <div className="visual-bars">
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className="visual-note">
-                    the rhythm
-                    <br />
-                    of a <i>new idea</i>
-                  </div>
+                <div className="story-visual media-visual">
+                  <video autoPlay loop muted playsInline preload="auto" poster="/assets/cultureloop-festival.jpg">
+                    <source src="/assets/cultureloop-festival-1.mp4" type="video/mp4" />
+                  </video>
                 </div>
                 <div className="story-meta">
                   <div>
-                    <p className="story-category">MUSIC · MEERA S.</p>
-                    <h3>From humming along to leading the room.</h3>
+                    <p className="story-category">FESTIVAL · LIVE MOMENTS</p>
+                    <h3>Make memories together.</h3>
+                  </div>
+                  <span className="story-arrow">
+                    <Icon name="arrow" size={17} />
+                  </span>
+                </div>
+              </article>
+
+              <article className="story-card">
+                <div className="story-visual media-visual">
+                  <video autoPlay loop muted playsInline preload="auto" poster="/assets/cultureloop-festival.jpg">
+                    <source src="/assets/cultureloop-festival-2.mp4" type="video/mp4" />
+                  </video>
+                </div>
+                <div className="story-meta">
+                  <div>
+                    <p className="story-category">FESTIVAL · ON STAGE</p>
+                    <h3>Energy that brings everyone in.</h3>
+                  </div>
+                  <span className="story-arrow">
+                    <Icon name="arrow" size={17} />
+                  </span>
+                </div>
+              </article>
+
+              <article className="story-card">
+                <div className="story-visual media-visual">
+                  <video autoPlay loop muted playsInline preload="auto" poster="/assets/cultureloop-festival.jpg">
+                    <source src="/assets/cultureloop-festival-3.mp4" type="video/mp4" />
+                  </video>
+                </div>
+                <div className="story-meta">
+                  <div>
+                    <p className="story-category">FESTIVAL · BEHIND THE SCENES</p>
+                    <h3>Every performance starts with a team.</h3>
                   </div>
                   <span className="story-arrow">
                     <Icon name="arrow" size={17} />
@@ -308,7 +333,7 @@ export function LandingPage({ onExplore }) {
                 <em>See where it takes you.</em>
               </h2>
             </div>
-            <button className="button button-light" onClick={() => setJoinOpen(true)}>
+            <button className="button button-light" onClick={handleDirectJoin}>
               Join CultureLoop <Icon name="arrow" size={17} />
             </button>
           </div>
@@ -354,7 +379,7 @@ export function LandingPage({ onExplore }) {
             </span>
             <p>We’ll help you find your creative people when CultureLoop opens at SVM.</p>
             <button className="button button-dark" onClick={() => setJoinOpen(false)}>
-              Done
+              Explore my dashboard <Icon name="arrow" size={16} />
             </button>
           </div>
         ) : (
@@ -372,7 +397,7 @@ export function LandingPage({ onExplore }) {
                 autoFocus
               />
               <button className="button button-dark full-width" type="submit">
-                Request access <Icon name="arrow" size={17} />
+                Join and open dashboard <Icon name="arrow" size={17} />
               </button>
             </form>
             <p className="form-note">No spam. Just opportunities worth showing up for.</p>
