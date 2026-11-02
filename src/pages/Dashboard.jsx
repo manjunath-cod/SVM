@@ -6,6 +6,7 @@ export function Dashboard({ onNavigate, currentUser }) {
   const [passport, setPassport] = useState(null);
   const [opportunities, setOpportunities] = useState([]);
   const [events, setEvents] = useState([]);
+  const [achievements, setAchievements] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,14 +16,16 @@ export function Dashboard({ onNavigate, currentUser }) {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [passData, oppData, evtData] = await Promise.all([
+      const [passData, oppData, evtData, achData] = await Promise.all([
         api.getPassport().catch(() => null),
         api.getOpportunities().catch(() => ({ opportunities: [] })),
-        api.getEvents().catch(() => ({ events: [] }))
+        api.getEvents().catch(() => ({ events: [] })),
+        api.getAchievements().catch(() => null)
       ]);
       setPassport(passData);
       setOpportunities(oppData?.opportunities || []);
       setEvents(evtData?.events || []);
+      setAchievements(achData);
     } catch (err) {
       console.warn('Dashboard data fetch error:', err);
     } finally {
@@ -113,6 +116,39 @@ export function Dashboard({ onNavigate, currentUser }) {
           </button>
         </section>
       </div>
+
+      {/* Achievement Crests Spotlight */}
+      <section className="app-panel dashboard-achievements-panel">
+        <div className="section-title-row">
+          <div>
+            <p className="eyebrow">SVM Official Achievements</p>
+            <h2>My Creative Badges ({achievements?.summary?.badgesEarned || 0} / 12 Earned)</h2>
+          </div>
+          <button className="text-link" onClick={() => onNavigate('achievements')}>
+            Open Achievement Showcase <Icon name="arrow" size={15} />
+          </button>
+        </div>
+        <div className="dash-badges-row">
+          {(achievements?.badges || []).slice(0, 6).map((badge) => (
+            <div
+              key={badge.id}
+              className={`dash-badge-item ${badge.unlocked ? 'is-earned' : 'is-locked'}`}
+              onClick={() => onNavigate('achievements')}
+              role="button"
+              tabIndex={0}
+              title={`${badge.name} · ${badge.unlocked ? 'Earned' : 'Locked milestone'}`}
+            >
+              <img
+                src={badge.image}
+                alt={badge.name}
+                className={`dash-badge-thumbnail ${badge.unlocked ? 'shine' : 'grayscale'}`}
+              />
+              <span className="dash-badge-title">{badge.name}</span>
+              <span className="dash-badge-status">{badge.unlocked ? 'Earned' : `${badge.progress}%`}</span>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Recommended Opportunities Section */}
       <section className="app-section">
