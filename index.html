@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="SVM CultureLoop helps students discover their creative interests, find their people, and create together." />
     <title>SVM CultureLoop — Find your creative people</title>
+    <script>
+      (() => {
+        const preference = localStorage.getItem('cultureloop-theme') || 'light';
+        const dark = preference === 'dark' || (preference === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
