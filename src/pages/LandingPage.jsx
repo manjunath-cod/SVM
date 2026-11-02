@@ -45,7 +45,6 @@ export function LandingPage({ onExplore, onJoin }) {
           <nav className={menuOpen ? 'nav-links is-open' : 'nav-links'} aria-label="Main navigation">
             <a href="#discover" onClick={() => setMenuOpen(false)}>Discover</a>
             <a href="#opportunities" onClick={() => setMenuOpen(false)}>Opportunities</a>
-            <a href="#showcase" onClick={() => setMenuOpen(false)}>Showcase</a>
             <a href="#about" onClick={() => setMenuOpen(false)}>About SVM</a>
             <div className="mobile-nav-action">
               <button
@@ -60,7 +59,6 @@ export function LandingPage({ onExplore, onJoin }) {
             </div>
           </nav>
           <div className="header-actions">
-            <a className="sign-in" href="#signin">Student Portal</a>
             <button className="button button-dark header-cta" onClick={handleDirectJoin}>
               Join SVM <Icon name="arrow" size={16} />
             </button>
@@ -217,23 +215,16 @@ export function LandingPage({ onExplore, onJoin }) {
               </a>
             </div>
 
-            <div className="showcase-grid">
+            <div className="showcase-grid showcase-media-grid">
               <article className="story-card story-feature">
-                <div className="story-visual visual-purple">
+                <div className="story-visual media-visual">
+                  <img src="/assets/cultureloop-festival.jpg" alt="Students celebrating at the SVM Youth Festival" />
                   <span className="story-stamp">SVM / 2026</span>
-                  <div className="visual-type">
-                    CREATE
-                    <br />
-                    <i>OUT LOUD</i>
-                  </div>
-                  <span className="story-play">
-                    <Icon name="play" size={19} />
-                  </span>
                 </div>
                 <div className="story-meta">
                   <div>
-                    <p className="story-category">FILMMAKING · AARAV S.</p>
-                    <h3>Finding the frame between moments.</h3>
+                    <p className="story-category">CAMPUS LIFE · SVM YOUTH FESTIVAL</p>
+                    <h3>One campus, many ways to shine.</h3>
                   </div>
                   <span className="story-arrow">
                     <Icon name="arrow" size={17} />
@@ -242,24 +233,49 @@ export function LandingPage({ onExplore, onJoin }) {
               </article>
 
               <article className="story-card">
-                <div className="story-visual visual-coral">
-                  <span className="story-stamp">STUDIO NOTES</span>
-                  <div className="visual-bars">
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className="visual-note">
-                    the rhythm
-                    <br />
-                    of a <i>new idea</i>
-                  </div>
+                <div className="story-visual media-visual">
+                  <video controls muted playsInline preload="metadata" poster="/assets/cultureloop-festival.jpg">
+                    <source src="/assets/cultureloop-festival-1.mp4" type="video/mp4" />
+                  </video>
                 </div>
                 <div className="story-meta">
                   <div>
-                    <p className="story-category">MUSIC · MEERA S.</p>
-                    <h3>From humming along to leading the room.</h3>
+                    <p className="story-category">FESTIVAL · LIVE MOMENTS</p>
+                    <h3>Make memories together.</h3>
+                  </div>
+                  <span className="story-arrow">
+                    <Icon name="arrow" size={17} />
+                  </span>
+                </div>
+              </article>
+
+              <article className="story-card">
+                <div className="story-visual media-visual">
+                  <video controls muted playsInline preload="metadata" poster="/assets/cultureloop-festival.jpg">
+                    <source src="/assets/cultureloop-festival-2.mp4" type="video/mp4" />
+                  </video>
+                </div>
+                <div className="story-meta">
+                  <div>
+                    <p className="story-category">FESTIVAL · ON STAGE</p>
+                    <h3>Energy that brings everyone in.</h3>
+                  </div>
+                  <span className="story-arrow">
+                    <Icon name="arrow" size={17} />
+                  </span>
+                </div>
+              </article>
+
+              <article className="story-card">
+                <div className="story-visual media-visual">
+                  <video controls muted playsInline preload="metadata" poster="/assets/cultureloop-festival.jpg">
+                    <source src="/assets/cultureloop-festival-3.mp4" type="video/mp4" />
+                  </video>
+                </div>
+                <div className="story-meta">
+                  <div>
+                    <p className="story-category">FESTIVAL · BEHIND THE SCENES</p>
+                    <h3>Every performance starts with a team.</h3>
                   </div>
                   <span className="story-arrow">
                     <Icon name="arrow" size={17} />
