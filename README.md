@@ -25,32 +25,24 @@ SVM CultureLoop provides students across every major an accessible, welcoming en
      - SHA-256 duplicate submission detection.
      - Visibility controls: *Campus Showcase*, *Public Portfolio*, or *Private*.
 
-2. **Creative Passport (`#passport`)**:
-   - Dynamic record of a student's creative journey.
-   - Multi-discipline interest mapping with per-category skill level (Beginner, Intermediate, Advanced) and confidence rating (Just exploring, Building confidence, Ready to collaborate, Stage-ready).
-   - Participation preferences (Solo, Ensemble, Behind-the-scenes/tech, Mentorship).
-   - Semester creative goals and availability tracking.
-   - Uploaded portfolio links and AI evaluation growth history.
-   - Real-time passport completeness percentage gauge.
-
-3. **Cultural Opportunities Hub (`#discover-app`)**:
+2. **Cultural Opportunities Hub (`#discover-app`)**:
    - Real database-backed directory of workshops, auditions, open jams, creative challenges, and exhibitions.
    - Multi-criteria filtering by category, format, and experience level.
    - One-click registration and interest tracking with live capacity counts.
 
-4. **Interdisciplinary Collaboration Hub (`#collaborate`)**:
+3. **Interdisciplinary Collaboration Hub (`#collaborate`)**:
    - Connects students with complementary skills (e.g. filmmakers seeking audio composers, poets seeking graphic designers).
    - Post project callouts and send direct collaboration requests.
 
-5. **Campus Cultural Calendar (`#events-app`)**:
+4. **Campus Cultural Calendar (`#events-app`)**:
    - Schedule of SVM performances, festivals, and exhibitions.
    - One-click RSVP tracking with attendee counts.
 
-6. **Student Portfolio (`#portfolio`)**:
+5. **Student Portfolio (`#portfolio`)**:
    - Considered home for a student's uploaded works and AI evaluation badges.
    - Embedded multimodal media players for audio, video, images, and documents.
 
-7. **Profile & Settings (`#profile`)**:
+6. **Profile & Settings (`#profile`)**:
    - Student academic details and system diagnostic monitor.
 
 ---
@@ -94,7 +86,6 @@ SVM/
 │   │   ├── SignIn.jsx                        # Student sign-in & demo personas
 │   │   ├── Dashboard.jsx                     # Student dashboard with live metrics
 │   │   ├── Showcase.jsx                      # AI Talent Discovery & Showcase flagship
-│   │   ├── Passport.jsx                      # Full Creative Passport manager
 │   │   ├── Discover.jsx                      # Opportunities hub with filters & registration
 │   │   ├── Collaborate.jsx                   # Interdisciplinary collaboration matchmaker
 │   │   ├── Events.jsx                        # Campus cultural events calendar & RSVPs
@@ -179,4 +170,3 @@ Open `http://localhost:3000` in your browser.
 ## License
 
 SVM CultureLoop is an internal open project for the SVM Institute of Technology community.
-

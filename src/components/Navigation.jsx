@@ -4,7 +4,6 @@ import { Logo, Icon } from './Icons.jsx';
 export const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'home' },
   { id: 'talent-feed', label: 'Talent Feed', icon: 'images' },
-  { id: 'passport', label: 'Creative Passport', icon: 'compass' },
   { id: 'discover-app', label: 'Opportunities', icon: 'badge' },
   { id: 'collaborate', label: 'Collaborate', icon: 'users' },
   { id: 'events-app', label: 'Events', icon: 'calendar' },

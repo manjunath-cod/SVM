@@ -7,7 +7,6 @@ import { LandingPage } from './pages/LandingPage.jsx';
 import { SignIn } from './pages/SignIn.jsx';
 import { Dashboard } from './pages/Dashboard.jsx';
 import { TalentFeed } from './pages/TalentFeed.jsx';
-import { Passport } from './pages/Passport.jsx';
 import { Discover } from './pages/Discover.jsx';
 import { Collaborate } from './pages/Collaborate.jsx';
 import { Events } from './pages/Events.jsx';
@@ -91,7 +90,6 @@ function App() {
   const authenticatedRoutes = [
     'dashboard',
     'talent-feed',
-    'passport',
     'discover-app',
     'collaborate',
     'events-app',
@@ -126,8 +124,6 @@ function App() {
           return <Dashboard onNavigate={navigateTo} currentUser={currentUser} />;
         case 'talent-feed':
           return <TalentFeed currentUser={currentUser} />;
-        case 'passport':
-          return <Passport onNavigate={navigateTo} currentUser={currentUser} />;
         case 'discover-app':
           return <Discover onNavigate={navigateTo} currentUser={currentUser} />;
         case 'collaborate':

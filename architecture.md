@@ -24,8 +24,8 @@ This document describes the architectural implementation of the **SVM CultureLoo
 ```text
                   ┌──────────────────────────────────────────────┐
                   │          Browser Client (React 19)           │
-                  │  Landing • Dashboard • AI Showcase • Passport │
-                  │   Discover • Collaborate • Events • Portfolio│
+                  │  Landing • Dashboard • AI Showcase             │
+                  │   Discover • Collaborate • Events • Portfolio  │
                   └──────────────────────┬───────────────────────┘
                                          │ HTTP / REST / Multipart Base64
                                          ▼
@@ -55,7 +55,7 @@ This document describes the architectural implementation of the **SVM CultureLoo
 - `src/components/Toast.jsx`: Unobtrusive feedback toasts for asynchronous operations.
 - `src/pages/LandingPage.jsx`: Public landing page preserving original visual identity and editorial layout.
 - `src/pages/SignIn.jsx`: Campus email sign-in with quick-switch student persona profiles.
-- `src/pages/Dashboard.jsx`: Personalized dashboard with dynamic passport completion metrics, personalized opportunity recommendations, activity feed, and campus calendar previews.
+- `src/pages/Dashboard.jsx`: Personalized dashboard with creative work metrics, opportunity recommendations, activity feed, and campus calendar previews.
 - `src/pages/Showcase.jsx`: **AI Talent Discovery & Showcase** flagship experience:
   - 15 creative categories with tailored hints.
   - Multimodal media dropzone with real-time file validation (max 25MB).
@@ -65,12 +65,6 @@ This document describes the architectural implementation of the **SVM CultureLoo
   - Explicit AI evaluation consent toggle.
   - Real-time Gemini evaluation scorecard with overall score, confidence rating, category rubric breakdown, individualized observations, strengths, areas for improvement, hands-on exercises, SVM campus recommendations, and academic integrity disclaimers.
   - Campus Showcase Feed tab allowing exploration of peer submissions filtered by discipline.
-- `src/pages/Passport.jsx`: Complete **Creative Passport** editor and portfolio viewer:
-  - Multi-discipline interest mapping with per-discipline skill and confidence ratings.
-  - Artistic introduction, semester goals, availability schedule, and participation role preferences.
-  - Live completeness gauge reflecting profile, interest, and submission progress.
-  - AI evaluation growth history and milestone cards.
-  - Cataloged portfolio works list.
 - `src/pages/Discover.jsx`: Campus opportunities directory with search, category filtering, format filtering, and live registration tracking.
 - `src/pages/Collaborate.jsx`: Interdisciplinary collaboration hub with project callout publishing, discipline filtering, and direct connection requests.
 - `src/pages/Events.jsx`: Campus cultural calendar with venue details and one-click RSVP tracking.
