@@ -11,3 +11,18 @@ uploads/*
 *.p12
 coverage/
 .DS_Store
+
+# Agent & local metadata
+.agent/
+.agents/
+.gemini/
+.gsd/
+GSD-STYLE.md
+PROJECT_RULES.md
+VERSION
+adapters/
+model_capabilities.yaml
+*.jpeg
+scripts/validate-*
+scripts/search_repo.*
+scripts/setup_search.*

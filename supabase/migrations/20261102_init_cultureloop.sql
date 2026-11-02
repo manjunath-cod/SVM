@@ -184,3 +184,20 @@ ALTER TABLE collaboration_requests ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Requests viewable by sender or post owner" ON collaboration_requests FOR SELECT USING (
   sender_id = auth.uid()::text OR sender_id = auth.jwt() ->> 'email'
 );
+
+CREATE TABLE IF NOT EXISTS user_achievements (
+  id TEXT PRIMARY KEY,
+  profile_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  badge_id TEXT NOT NULL,
+  unlocked_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  progress INTEGER DEFAULT 100,
+  featured INTEGER DEFAULT 1,
+  notified INTEGER DEFAULT 0,
+  UNIQUE(profile_id, badge_id)
+);
+
+ALTER TABLE user_achievements ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Achievements viewable by everyone" ON user_achievements FOR SELECT USING (true);
+CREATE POLICY "Users can manage own achievements" ON user_achievements FOR ALL USING (
+  profile_id = auth.uid()::text OR profile_id = auth.jwt() ->> 'email'
+);
