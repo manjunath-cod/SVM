@@ -40,31 +40,39 @@ export function Dashboard({ onNavigate, currentUser }) {
   const completionPct = passport?.completionPercentage || 45;
   const userInterests = passport?.interests?.map((i) => i.category) || ['photography', 'music', 'writing'];
   const userSubmissions = passport?.submissions || [];
-  const firstName = currentUser?.name?.split(' ')[0] || 'Creator';
 
   return (
     <div className="dashboard-page">
       {/* Welcome Banner */}
-      <section className="welcome-panel dashboard-reveal">
+      <section className="welcome-panel">
         <div className="welcome-copy">
           <p className="eyebrow">{todayStr}</p>
-          <div className="welcome-status"><span /> Your creative space is ready</div>
-          <h1>Welcome back, {firstName}.</h1>
+          <div className="welcome-status">
+            <span />
+            Your creative space is ready
+          </div>
+          <h1>Welcome back, {currentUser?.name?.split(' ')[0] || 'Creator'}.</h1>
           <p>Your creative ideas, AI evaluations, and collaborative campus network in one place.</p>
         </div>
         <div className="welcome-side">
           <div className="welcome-mark">
             <Icon name="spark" size={32} />
           </div>
-          <div className="welcome-stats" aria-label="Your CultureLoop snapshot">
-            <div><strong>{userSubmissions.length}</strong><span>works shared</span></div>
-            <div><strong>{completionPct}%</strong><span>passport ready</span></div>
+          <div className="welcome-stats" aria-label="Creative space summary">
+            <div>
+              <strong>{userSubmissions.length}</strong>
+              <span>Works shared</span>
+            </div>
+            <div>
+              <strong>{completionPct}%</strong>
+              <span>Passport ready</span>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Top 2 Action Cards */}
-      <div className="dashboard-grid dashboard-reveal dashboard-reveal-delay-1">
+      <div className="dashboard-grid">
         {/* Creative Passport Summary Card */}
         <section className="app-panel passport-summary">
           <div className="panel-heading">
@@ -107,7 +115,7 @@ export function Dashboard({ onNavigate, currentUser }) {
       </div>
 
       {/* Recommended Opportunities Section */}
-      <section className="app-section dashboard-reveal dashboard-reveal-delay-2">
+      <section className="app-section">
         <div className="section-title-row">
           <div>
             <p className="eyebrow">Personalized For You</p>
@@ -142,7 +150,7 @@ export function Dashboard({ onNavigate, currentUser }) {
       </section>
 
       {/* Lower Dashboard Grid: Activity & Upcoming Events */}
-      <div className="dashboard-lower dashboard-reveal dashboard-reveal-delay-3">
+      <div className="dashboard-lower">
         {/* Recent Activity */}
         <section className="app-panel activity-panel">
           <div className="section-title-row">

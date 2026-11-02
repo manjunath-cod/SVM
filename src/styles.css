@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
   --ink: #19182e;
@@ -4073,4 +4073,144 @@ fieldset legend {
   .theme-option {
     grid-template-columns: 44px 1fr auto;
   }
+}
+
+/* Approved CultureLoop dashboard treatment */
+:root {
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-shadow: 0 16px 38px rgba(87, 52, 126, 0.12);
+}
+
+.app-shell {
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(110deg, rgba(255, 248, 244, 0.16), rgba(235, 220, 249, 0.2)),
+    url('/assets/cultureloop-pinned.jpg') center / cover fixed;
+}
+
+.app-shell::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  background: linear-gradient(180deg, rgba(255, 249, 245, 0.05), rgba(255, 239, 249, 0.16));
+  pointer-events: none;
+}
+
+.app-sidebar {
+  border-right-color: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 251, 248, 0.42);
+  box-shadow: 10px 0 30px rgba(85, 49, 114, 0.06);
+  backdrop-filter: blur(14px) saturate(115%);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+}
+
+.app-header {
+  border-bottom-color: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 251, 248, 0.28);
+  backdrop-filter: blur(14px) saturate(115%);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+}
+
+.app-panel,
+.opportunity-card,
+.settings-card,
+.settings-hero {
+  border-color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 253, 250, 0.93);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.journey-card {
+  background: rgba(247, 239, 255, 0.94);
+}
+
+.match-note {
+  background: #faf8fd;
+}
+
+.welcome-panel {
+  border-color: rgba(255, 255, 255, 0.14);
+  background:
+    radial-gradient(circle at 82% 18%, rgba(117, 69, 214, 0.4), transparent 34%),
+    linear-gradient(112deg, #090711 0%, #171226 46%, #7545d6 100%);
+  box-shadow: 0 20px 46px rgba(32, 19, 61, 0.26);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.welcome-panel .eyebrow {
+  color: #b99aff;
+}
+
+.welcome-panel .welcome-status {
+  border-color: rgba(185, 154, 255, 0.3);
+  color: #eee8ff;
+}
+
+.welcome-panel .welcome-mark {
+  color: #ffcf65;
+}
+
+.welcome-panel .welcome-stats div {
+  border-left-color: rgba(255, 255, 255, 0.22);
+}
+
+.welcome-panel .welcome-stats strong {
+  color: #fff;
+}
+
+.welcome-panel .welcome-stats span {
+  color: #c9c0dc;
+}
+
+.side-link:hover {
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.side-link.active {
+  background: rgba(238, 224, 255, 0.82);
+  box-shadow: inset 3px 0 0 var(--purple);
+}
+
+.action-button-pill,
+.profile-pill,
+.tab-pill-group {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 253, 250, 0.66);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+@media (max-width: 950px) {
+  .app-sidebar {
+    background: rgba(255, 251, 248, 0.9);
+  }
+}
+
+:root[data-theme='dark'] .app-shell {
+  background:
+    linear-gradient(110deg, rgba(9, 7, 17, 0.8), rgba(36, 21, 54, 0.72)),
+    url('/assets/cultureloop-pinned.jpg') center / cover fixed;
+}
+
+:root[data-theme='dark'] .app-sidebar,
+:root[data-theme='dark'] .app-header {
+  background: rgba(18, 13, 30, 0.78);
+  border-color: rgba(190, 160, 235, 0.2);
+}
+
+:root[data-theme='dark'] .app-panel,
+:root[data-theme='dark'] .opportunity-card,
+:root[data-theme='dark'] .settings-card,
+:root[data-theme='dark'] .settings-hero {
+  border-color: rgba(190, 160, 235, 0.22);
+  background: rgba(24, 16, 39, 0.94);
+}
+
+:root[data-theme='dark'] .journey-card {
+  background: rgba(45, 28, 67, 0.94) !important;
 }
