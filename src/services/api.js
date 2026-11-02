@@ -118,5 +118,17 @@ export const api = {
   sendCollaborationRequest: (id, message) => request(`/api/collaborations/${id}/request`, {
     method: 'POST',
     body: JSON.stringify({ message })
+  }),
+
+  // Official Achievement Showcase
+  getAchievements: () => request('/api/achievements'),
+  verifyAchievements: () => request('/api/achievements/verify', { method: 'POST' }),
+  toggleFeatureBadge: (badgeId) => request('/api/achievements/toggle-feature', {
+    method: 'POST',
+    body: JSON.stringify({ badgeId })
+  }),
+  markBadgeNotified: (badgeId) => request('/api/achievements/mark-notified', {
+    method: 'POST',
+    body: JSON.stringify({ badgeId })
   })
 };

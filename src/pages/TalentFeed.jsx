@@ -1,3 +1,4 @@
+import { api } from '../services/api.js';
 import React, { useMemo, useRef, useState } from 'react';
 import { Icon } from '../components/Icons.jsx';
 import { Modal } from '../components/Modal.jsx';
@@ -8,7 +9,7 @@ function Avatar({ creator, size = 'medium' }) {
   return <span className={`talent-avatar talent-avatar-${size}`} style={{ background: creator.color }} aria-hidden="true">{creator.initials}</span>;
 }
 
-function CreatePost({ currentUser, onPost, onNotify }) {
+function CreatePost({ currentUser, userBadges, userBadgeCount, onPost, onNotify }) {
   const [caption, setCaption] = useState('');
   const [hashtags, setHashtags] = useState('');
   const [category, setCategory] = useState('singing');
@@ -16,7 +17,7 @@ function CreatePost({ currentUser, onPost, onNotify }) {
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState('');
   const inputRef = useRef(null);
-  const creator = { name: currentUser?.name || 'Your creative profile', initials: (currentUser?.name || 'You').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(), color: '#7652F5' };
+  const creator = { name: currentUser?.name || 'Your creative profile', initials: (currentUser?.name || 'You').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(), color: '#7652F5', badges: userBadges || [], badgeCount: userBadgeCount || 0 };
 
   const handleFile = (event) => {
     const nextFile = event.target.files?.[0];
@@ -99,7 +100,30 @@ function PostCard({ post, liked, saved, onLike, onComment, onSave, onShare, onFo
   return <article className="talent-post-card" id={`post-${post.id}`}>
     <header className="talent-post-header">
       <Avatar creator={post.creator} />
-      <div><strong>{post.creator.name}</strong><span>{categoryLabel} · {post.timestamp}</span></div>
+      <div className="talent-header-info">
+        <div className="talent-author-row">
+          <strong>{post.creator.name}</strong>
+          {post.creator.badges && post.creator.badges.length > 0 && (
+            <div className="talent-badge-chips" title="Verified SVM Achievements">
+              {post.creator.badges.slice(0, 2).map((b) => (
+                <img
+                  key={b.id || b.name}
+                  src={b.image}
+                  alt={b.name}
+                  className="talent-badge-crest"
+                  title={`${b.name} · Verified SVM Achievement`}
+                />
+              ))}
+            </div>
+          )}
+          {post.creator.badgeCount ? (
+            <span className="talent-badge-count-pill" title="Verified SVM Milestones">
+              <Icon name="badge" size={11} /> {post.creator.badgeCount}
+            </span>
+          ) : null}
+        </div>
+        <span>{categoryLabel} · {post.timestamp}</span>
+      </div>
       <button className="talent-follow-inline" onClick={() => onFollow(post.creator.name)}>{following ? 'Following' : 'Follow'}</button>
     </header>
     {post.media.length > 0 && <div className={`talent-media talent-media-${post.mediaType}`}>
@@ -121,7 +145,27 @@ function CommentsModal({ post, onClose, onAdd }) {
 }
 
 function CreatorCard({ creator, following, onFollow }) {
-  return <div className="creator-card"><Avatar creator={creator} /><div className="creator-info"><strong>{creator.name}</strong><span>{creator.category}</span><p>{creator.bio}</p></div><button className={following ? 'button button-light btn-sm' : 'button button-primary btn-sm'} onClick={() => onFollow(creator.name)}>{following ? 'Following' : 'Follow'}</button></div>;
+  return (
+    <div className="creator-card">
+      <Avatar creator={creator} />
+      <div className="creator-info">
+        <div className="creator-title-row">
+          <strong>{creator.name}</strong>
+          {creator.badges && creator.badges.length > 0 && (
+            <img
+              src={creator.badges[0].image}
+              alt={creator.badges[0].name}
+              className="creator-badge-crest"
+              title={`${creator.badges[0].name} · Verified Achievement`}
+            />
+          )}
+        </div>
+        <span>{creator.category}</span>
+        <p>{creator.bio}</p>
+      </div>
+      <button className={following ? 'button button-light btn-sm' : 'button button-primary btn-sm'} onClick={() => onFollow(creator.name)}>{following ? 'Following' : 'Follow'}</button>
+    </div>
+  );
 }
 
 export function TalentFeed({ currentUser }) {
@@ -135,6 +179,16 @@ export function TalentFeed({ currentUser }) {
   const [commentsFor, setCommentsFor] = useState(null);
   const [imageFor, setImageFor] = useState(null);
   const [toast, setToast] = useState(null);
+  const [currentUserBadges, setCurrentUserBadges] = useState([]);
+  const [currentUserBadgeCount, setCurrentUserBadgeCount] = useState(0);
+
+  React.useEffect(() => {
+    api.getAchievements().then((data) => {
+      const featured = (data.badges || []).filter((b) => b.unlocked && b.featured);
+      setCurrentUserBadges(featured);
+      setCurrentUserBadgeCount(data.summary?.badgesEarned || 0);
+    }).catch(() => {});
+  }, []);
 
   const visiblePosts = useMemo(() => posts.filter((post) => {
     const matchesFilter = filter === 'all' || filter === 'trending' ? filter !== 'trending' || post.trending : post.category === filter;
@@ -155,7 +209,7 @@ export function TalentFeed({ currentUser }) {
     <div className="talent-page-heading"><div><p className="eyebrow">Student Talent Community</p><h1>Every talent deserves a <em>stage.</em></h1><p className="page-copy">Discover creativity, celebrate student talent and share what you love creating.</p></div><div className="talent-demo-badge"><Icon name="images" size={18} /><span>Illustrative demo profiles</span></div></div>
     <div className="talent-layout">
       <main className="talent-main-column">
-        <CreatePost currentUser={currentUser} onPost={(post) => setPosts((items) => [post, ...items])} onNotify={setToast} />
+        <CreatePost currentUser={currentUser} userBadges={currentUserBadges} userBadgeCount={currentUserBadgeCount} onPost={(post) => setPosts((items) => [post, ...items])} onNotify={setToast} />
         <div className="talent-section-heading"><div><p className="eyebrow">Your creative circle</p><h2>Watch Talents</h2><p>Discover what your fellow students are creating.</p></div></div>
         <div className="talent-toolbar"><div className="talent-search"><Icon name="search" size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search creators, captions or hashtags" aria-label="Search talent feed" /></div><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort posts"><option value="latest">Latest</option><option value="liked">Most Liked</option><option value="discussed">Most Discussed</option></select></div>
         <div className="talent-filters" role="tablist" aria-label="Talent categories">{CATEGORY_FILTERS.map((item) => <button key={item.id} className={filter === item.id ? 'active' : ''} onClick={() => setFilter(item.id)} role="tab" aria-selected={filter === item.id}>{item.label}</button>)}</div>

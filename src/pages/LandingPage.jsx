@@ -10,7 +10,7 @@ const defaultEvents = [
   { date: '08', month: 'JAN', title: 'Create Together', meta: 'Innovation Lab · 4:00 PM', type: 'Workshop' },
 ];
 
-export function LandingPage({ onExplore, onJoin }) {
+export function LandingPage({ onExplore }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const [selected, setSelected] = useState([]);
@@ -23,18 +23,9 @@ export function LandingPage({ onExplore, onJoin }) {
     );
   };
 
-  const handleJoinSubmit = async (e) => {
+  const handleJoinSubmit = (e) => {
     e.preventDefault();
-    if (!onJoin) {
-      setJoinSubmitted(true);
-      return;
-    }
-
-    await onJoin(joinEmail.trim());
-  };
-
-  const handleDirectJoin = () => {
-    onJoin?.('student@svmit.ac.in');
+    setJoinSubmitted(true);
   };
 
   return (
@@ -51,7 +42,7 @@ export function LandingPage({ onExplore, onJoin }) {
               <button
                 className="button button-dark"
                 onClick={() => {
-                  handleDirectJoin();
+                  setJoinOpen(true);
                   setMenuOpen(false);
                 }}
               >
@@ -61,7 +52,7 @@ export function LandingPage({ onExplore, onJoin }) {
           </nav>
           <div className="header-actions">
             <a className="sign-in" href="#signin">Student Portal</a>
-            <button className="button button-dark header-cta" onClick={handleDirectJoin}>
+            <button className="button button-dark header-cta" onClick={() => setJoinOpen(true)}>
               Join SVM <Icon name="arrow" size={16} />
             </button>
             <button
@@ -317,7 +308,7 @@ export function LandingPage({ onExplore, onJoin }) {
                 <em>See where it takes you.</em>
               </h2>
             </div>
-            <button className="button button-light" onClick={handleDirectJoin}>
+            <button className="button button-light" onClick={() => setJoinOpen(true)}>
               Join CultureLoop <Icon name="arrow" size={17} />
             </button>
           </div>
@@ -363,7 +354,7 @@ export function LandingPage({ onExplore, onJoin }) {
             </span>
             <p>We’ll help you find your creative people when CultureLoop opens at SVM.</p>
             <button className="button button-dark" onClick={() => setJoinOpen(false)}>
-              Explore my dashboard <Icon name="arrow" size={16} />
+              Done
             </button>
           </div>
         ) : (
@@ -381,7 +372,7 @@ export function LandingPage({ onExplore, onJoin }) {
                 autoFocus
               />
               <button className="button button-dark full-width" type="submit">
-                Join and open dashboard <Icon name="arrow" size={17} />
+                Request access <Icon name="arrow" size={17} />
               </button>
             </form>
             <p className="form-note">No spam. Just opportunities worth showing up for.</p>

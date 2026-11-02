@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { db } from './db.js';
 import { evaluateSubmissionWithGemini } from './gemini.js';
 import { getGeminiApiKey } from './env.js';
+import { SERVER_SVM_BADGES, getUserStats, syncUserAchievements } from './badges.js';
 
 const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) {
@@ -62,6 +63,59 @@ function getCurrentUser(req) {
     profile = db.prepare('SELECT * FROM profiles WHERE email = ?').get(email);
   }
   return profile;
+}
+
+function buildAchievementsResponse(userId) {
+  syncUserAchievements(userId);
+  const rows = db.prepare('SELECT * FROM user_achievements WHERE profile_id = ?').all(userId);
+  const earnedMap = new Map();
+  rows.forEach((r) => earnedMap.set(r.badge_id, r));
+
+  const stats = getUserStats(userId);
+  let totalXp = 0;
+  let badgesEarned = 0;
+
+  const badges = SERVER_SVM_BADGES.map((b) => {
+    const earned = earnedMap.get(b.id);
+    const isUnlocked = Boolean(earned);
+    if (isUnlocked) {
+      totalXp += b.xp;
+      badgesEarned++;
+    }
+    const progress = isUnlocked ? 100 : b.calcProgress(stats);
+
+    return {
+      id: b.id,
+      name: b.name,
+      image: b.image,
+      category: b.category,
+      filterCategory: b.filterCategory,
+      requirement: b.requirement,
+      description: b.description,
+      xp: b.xp,
+      criteria: b.requirement,
+      unlocked: isUnlocked,
+      unlocked_at: earned ? earned.unlocked_at : null,
+      progress,
+      featured: earned ? Boolean(earned.featured) : false,
+      notified: earned ? Boolean(earned.notified) : true
+    };
+  });
+
+  const recentUnlocks = badges.filter((b) => b.unlocked && !b.notified);
+
+  return {
+    summary: {
+      badgesEarned,
+      totalBadges: 12,
+      totalXp,
+      weeklyXp: Math.min(totalXp, 350),
+      verifiedMilestones: stats.activityCount,
+      certificatesEarned: badgesEarned >= 8 ? 2 : badgesEarned >= 4 ? 1 : 0
+    },
+    badges,
+    recentUnlocks
+  };
 }
 
 export async function handleApiRequest(req, res, pathname, queryParams) {
@@ -481,11 +535,20 @@ export async function handleApiRequest(req, res, pathname, queryParams) {
 
     const submissions = db.prepare(query).all(...params);
 
-    // Attach evaluation summary if exists
+    // Attach evaluation summary and author achievements if exists
     const enriched = submissions.map((sub) => {
       const evaluation = db.prepare('SELECT * FROM evaluations WHERE submission_id = ?').get(sub.id);
+      const authorBadges = db.prepare(`
+        SELECT badge_id, unlocked_at FROM user_achievements
+        WHERE profile_id = ? AND featured = 1
+        ORDER BY unlocked_at ASC LIMIT 3
+      `).all(sub.profile_id);
+      const badgeCountRow = db.prepare('SELECT count(*) as count FROM user_achievements WHERE profile_id = ?').get(sub.profile_id);
+
       return {
         ...sub,
+        author_badges: authorBadges,
+        author_badge_count: badgeCountRow?.count || 0,
         evaluation: evaluation ? {
           id: evaluation.id,
           overall_score: evaluation.overall_score,
@@ -871,6 +934,63 @@ export async function handleApiRequest(req, res, pathname, queryParams) {
 
     const stream = fs.createReadStream(filePath);
     stream.pipe(res);
+    return true;
+  }
+
+  // 16. Official Achievements Showcase API
+  if (pathname === '/api/achievements' && req.method === 'GET') {
+    const user = getCurrentUser(req);
+    const data = buildAchievementsResponse(user.id);
+    sendJson(res, 200, data);
+    return true;
+  }
+
+  if (pathname === '/api/achievements/verify' && req.method === 'POST') {
+    const user = getCurrentUser(req);
+    syncUserAchievements(user.id);
+    const data = buildAchievementsResponse(user.id);
+    sendJson(res, 200, { ...data, message: 'Achievements verified and updated successfully.' });
+    return true;
+  }
+
+  if (pathname === '/api/achievements/toggle-feature' && req.method === 'POST') {
+    const user = getCurrentUser(req);
+    const body = await parseJsonBody(req);
+    const badgeId = body.badgeId;
+
+    if (!badgeId) {
+      sendJson(res, 400, { error: 'badgeId is required' });
+      return true;
+    }
+
+    const row = db.prepare('SELECT * FROM user_achievements WHERE profile_id = ? AND badge_id = ?').get(user.id, badgeId);
+    if (!row) {
+      sendJson(res, 404, { error: 'Badge has not been unlocked yet.' });
+      return true;
+    }
+
+    const newFeatured = row.featured ? 0 : 1;
+    db.prepare('UPDATE user_achievements SET featured = ? WHERE profile_id = ? AND badge_id = ?')
+      .run(newFeatured, user.id, badgeId);
+
+    sendJson(res, 200, { badgeId, featured: Boolean(newFeatured) });
+    return true;
+  }
+
+  if (pathname === '/api/achievements/mark-notified' && req.method === 'POST') {
+    const user = getCurrentUser(req);
+    const body = await parseJsonBody(req);
+    const badgeId = body.badgeId;
+
+    if (badgeId) {
+      db.prepare('UPDATE user_achievements SET notified = 1 WHERE profile_id = ? AND badge_id = ?')
+        .run(user.id, badgeId);
+    } else {
+      db.prepare('UPDATE user_achievements SET notified = 1 WHERE profile_id = ?')
+        .run(user.id);
+    }
+
+    sendJson(res, 200, { success: true });
     return true;
   }
 

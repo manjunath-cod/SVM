@@ -27,7 +27,7 @@ const demoImage = (id, width = 900, height = 720) => `https://images.unsplash.co
 export const INITIAL_POSTS = [
   {
     id: 'post-1',
-    creator: { name: 'Demo Creator One', initials: 'DC', color: '#7652F5', category: 'Photography', bio: 'Finding stories in ordinary places.' },
+    creator: { name: 'Demo Creator One', initials: 'DC', color: '#7652F5', category: 'Photography', bio: 'Finding stories in ordinary places.', badges: [{ id: 'frame-artist', name: 'Frame Artist', image: '/images/badges/frame-artist.png' }, { id: 'creative-explorer', name: 'Creative Explorer', image: '/images/badges/creative-explorer.png' }], badgeCount: 3 },
     timestamp: '2h ago',
     category: 'photography',
     mediaType: 'image',
@@ -41,7 +41,7 @@ export const INITIAL_POSTS = [
   },
   {
     id: 'post-2',
-    creator: { name: 'Demo Creator Two', initials: 'CT', color: '#E17865', category: 'Singing & Music', bio: 'Learning, layering and sharing melodies.' },
+    creator: { name: 'Demo Creator Two', initials: 'CT', color: '#E17865', category: 'Singing & Music', bio: 'Learning, layering and sharing melodies.', badges: [{ id: 'voice-of-svm', name: 'Voice of SVM', image: '/images/badges/voice-of-svm.png' }, { id: 'rising-star', name: 'Rising Star', image: '/images/badges/rising-star.png' }], badgeCount: 4 },
     timestamp: '5h ago',
     category: 'singing',
     mediaType: 'video',
@@ -55,7 +55,7 @@ export const INITIAL_POSTS = [
   },
   {
     id: 'post-3',
-    creator: { name: 'Demo Creator Three', initials: 'CT', color: '#2D9CDB', category: 'Drawing & Painting', bio: 'Sketchbooks, color studies and big ideas.' },
+    creator: { name: 'Demo Creator Three', initials: 'CT', color: '#2D9CDB', category: 'Drawing & Painting', bio: 'Sketchbooks, color studies and big ideas.', badges: [{ id: 'canvas-creator', name: 'Canvas Creator', image: '/images/badges/canvas-creator.png' }], badgeCount: 2 },
     timestamp: 'Yesterday',
     category: 'art',
     mediaType: 'image',
@@ -69,9 +69,9 @@ export const INITIAL_POSTS = [
 ];
 
 export const INITIAL_CREATORS = [
-  { name: 'Demo Creator One', initials: 'DC', color: '#7652F5', category: 'Photography', bio: 'Finding stories in ordinary places.' },
-  { name: 'Demo Creator Two', initials: 'CT', color: '#E17865', category: 'Music', bio: 'Learning, layering and sharing melodies.' },
-  { name: 'Demo Creator Three', initials: 'CT', color: '#2D9CDB', category: 'Art', bio: 'Sketchbooks, color studies and big ideas.' },
-  { name: 'Demo Creator Four', initials: 'DF', color: '#43A47A', category: 'Dance', bio: 'Movement, rhythm and expressive spaces.' }
+  { name: 'Demo Creator One', initials: 'DC', color: '#7652F5', category: 'Photography', bio: 'Finding stories in ordinary places.', badges: [{ id: 'frame-artist', name: 'Frame Artist', image: '/images/badges/frame-artist.png' }], badgeCount: 3 },
+  { name: 'Demo Creator Two', initials: 'CT', color: '#E17865', category: 'Music', bio: 'Learning, layering and sharing melodies.', badges: [{ id: 'voice-of-svm', name: 'Voice of SVM', image: '/images/badges/voice-of-svm.png' }], badgeCount: 4 },
+  { name: 'Demo Creator Three', initials: 'CT', color: '#2D9CDB', category: 'Art', bio: 'Sketchbooks, color studies and big ideas.', badges: [{ id: 'canvas-creator', name: 'Canvas Creator', image: '/images/badges/canvas-creator.png' }], badgeCount: 2 },
+  { name: 'Demo Creator Four', initials: 'DF', color: '#43A47A', category: 'Dance', bio: 'Movement, rhythm and expressive spaces.', badges: [{ id: 'rhythm-keeper', name: 'Rhythm Keeper', image: '/images/badges/rhythm-keeper.png' }], badgeCount: 3 }
 ];
 

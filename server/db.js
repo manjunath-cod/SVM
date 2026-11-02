@@ -172,6 +172,18 @@ export function initDatabase() {
       FOREIGN KEY (post_id) REFERENCES collaboration_posts(id) ON DELETE CASCADE,
       FOREIGN KEY (sender_id) REFERENCES profiles(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS user_achievements (
+      id TEXT PRIMARY KEY,
+      profile_id TEXT NOT NULL,
+      badge_id TEXT NOT NULL,
+      unlocked_at TEXT NOT NULL,
+      progress INTEGER DEFAULT 100,
+      featured INTEGER DEFAULT 1,
+      notified INTEGER DEFAULT 0,
+      UNIQUE(profile_id, badge_id),
+      FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+    );
   `);
 
   for (const statement of [
