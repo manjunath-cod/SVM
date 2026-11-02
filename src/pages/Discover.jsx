@@ -3,7 +3,7 @@ import { PageHeader } from '../components/Navigation.jsx';
 import { Icon } from '../components/Icons.jsx';
 import { Toast } from '../components/Toast.jsx';
 import { api } from '../services/api.js';
-import { CREATIVE_CATEGORIES } from './Showcase.jsx';
+import { CREATIVE_CATEGORIES } from '../data/talentFeed.js';
 
 export function Discover({ onNavigate }) {
   const [opportunities, setOpportunities] = useState([]);
@@ -221,4 +221,3 @@ export function Discover({ onNavigate }) {
     </div>
   );
 }
-

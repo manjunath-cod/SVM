@@ -100,16 +100,16 @@ export function Dashboard({ onNavigate, currentUser }) {
 
         {/* Continue Your Journey Card */}
         <section className="app-panel journey-card">
-          <p className="eyebrow">AI Talent Discovery</p>
-          <h2>Ready to submit a new piece?</h2>
+          <p className="eyebrow">Student Talent Community</p>
+          <h2>Ready to share a new piece?</h2>
           <p className="muted">
-            Upload your singing, instrumentals, dance, photography, writing, or design for personalized Gemini AI evaluation.
+            Share your singing, dance, photography, writing, or design with fellow students.
           </p>
           <button
             className="button button-primary"
-            onClick={() => onNavigate('showcase-app')}
+            onClick={() => onNavigate('talent-feed')}
           >
-            <Icon name="upload" size={16} /> Submit for AI Evaluation
+            <Icon name="upload" size={16} /> Open Talent Feed
           </button>
         </section>
       </div>

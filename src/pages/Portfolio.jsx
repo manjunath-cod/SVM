@@ -41,13 +41,13 @@ export function Portfolio({ onNavigate }) {
             A considered home <em>for your creative work.</em>
           </>
         }
-        copy="Your cataloged recordings, visual pieces, writings, and experiments. Track your artistic trajectory and AI mentorship insights over time."
+        copy="Your cataloged recordings, visual pieces, writings, and experiments. Track your artistic trajectory over time."
         action={
           <button
             className="button button-primary"
-            onClick={() => onNavigate('showcase-app')}
+            onClick={() => onNavigate('talent-feed')}
           >
-            <Icon name="upload" size={16} /> Submit New Work
+            <Icon name="upload" size={16} /> Share New Work
           </button>
         }
       />
@@ -96,9 +96,9 @@ export function Portfolio({ onNavigate }) {
           <span>Share your first song, photograph, painting, or poem to start building your portfolio.</span>
           <button
             className="button button-primary"
-            onClick={() => onNavigate('showcase-app')}
+            onClick={() => onNavigate('talent-feed')}
           >
-            <Icon name="upload" size={16} /> Upload your first work
+            <Icon name="upload" size={16} /> Share your first work
           </button>
         </div>
       ) : (
@@ -126,18 +126,18 @@ export function Portfolio({ onNavigate }) {
                 <h3>{item.title}</h3>
                 <p className="portfolio-desc">{item.description || 'No description provided.'}</p>
 
-                {/* AI Evaluation Highlights */}
+                {/* Optional feedback metadata from existing portfolio records */}
                 {item.evaluation ? (
                   <div className="portfolio-ai-pill">
-                    <Icon name="spark" size={13} />
+                    <Icon name="checkCircle" size={13} />
                     <span>
                       {item.evaluation.overall_score
-                        ? `AI Score: ${item.evaluation.overall_score.toFixed(1)} / 10`
-                        : 'Feedback recorded'}
+                        ? `Creative feedback: ${item.evaluation.overall_score.toFixed(1)} / 10`
+                        : 'Creative feedback recorded'}
                     </span>
                   </div>
                 ) : (
-                  <span className="portfolio-pending-pill">Awaiting AI evaluation</span>
+                  <span className="portfolio-pending-pill">Feedback not added yet</span>
                 )}
 
                 <div className="portfolio-card-actions">
@@ -185,7 +185,7 @@ export function Portfolio({ onNavigate }) {
               <div className="modal-eval-box">
                 <div className="eval-box-top">
                   <span className="badge-pill">
-                    <Icon name="spark" size={13} /> Gemini AI Feedback
+                    <Icon name="checkCircle" size={13} /> Creative Feedback
                   </span>
                   {selectedSub.evaluation.overall_score && (
                     <strong className="badge-score">
@@ -223,4 +223,3 @@ export function Portfolio({ onNavigate }) {
     </div>
   );
 }
-

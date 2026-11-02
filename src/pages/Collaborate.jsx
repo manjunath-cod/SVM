@@ -4,7 +4,7 @@ import { Icon } from '../components/Icons.jsx';
 import { Modal } from '../components/Modal.jsx';
 import { Toast } from '../components/Toast.jsx';
 import { api } from '../services/api.js';
-import { CREATIVE_CATEGORIES } from './Showcase.jsx';
+import { CREATIVE_CATEGORIES } from '../data/talentFeed.js';
 
 export function Collaborate({ onNavigate }) {
   const [posts, setPosts] = useState([]);
@@ -324,4 +324,3 @@ export function Collaborate({ onNavigate }) {
     </div>
   );
 }
-

@@ -3,7 +3,7 @@ import { Logo, Icon } from './Icons.jsx';
 
 export const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'home' },
-  { id: 'showcase-app', label: 'AI Showcase', icon: 'spark' },
+  { id: 'talent-feed', label: 'Talent Feed', icon: 'images' },
   { id: 'passport', label: 'Creative Passport', icon: 'compass' },
   { id: 'discover-app', label: 'Opportunities', icon: 'badge' },
   { id: 'collaborate', label: 'Collaborate', icon: 'users' },
@@ -85,11 +85,11 @@ export function AppShell({ active, onNavigate, onSignOut, currentUser, children 
           <div className="app-header-actions">
             <button
               className="action-button-pill"
-              onClick={() => onNavigate('showcase-app')}
-              title="Upload work for AI evaluation"
+              onClick={() => onNavigate('talent-feed')}
+              title="Share your creative work"
             >
-              <Icon name="spark" size={15} />
-              <span>Submit for AI Eval</span>
+              <Icon name="plus" size={15} />
+              <span>Share your talent</span>
             </button>
 
             <button
