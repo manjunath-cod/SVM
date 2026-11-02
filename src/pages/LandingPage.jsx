@@ -234,7 +234,7 @@ export function LandingPage({ onExplore, onJoin }) {
 
               <article className="story-card">
                 <div className="story-visual media-visual">
-                  <video controls muted playsInline preload="metadata" poster="/assets/cultureloop-festival.jpg">
+                  <video autoPlay loop muted playsInline preload="auto" poster="/assets/cultureloop-festival.jpg">
                     <source src="/assets/cultureloop-festival-1.mp4" type="video/mp4" />
                   </video>
                 </div>
@@ -251,7 +251,7 @@ export function LandingPage({ onExplore, onJoin }) {
 
               <article className="story-card">
                 <div className="story-visual media-visual">
-                  <video controls muted playsInline preload="metadata" poster="/assets/cultureloop-festival.jpg">
+                  <video autoPlay loop muted playsInline preload="auto" poster="/assets/cultureloop-festival.jpg">
                     <source src="/assets/cultureloop-festival-2.mp4" type="video/mp4" />
                   </video>
                 </div>
@@ -268,7 +268,7 @@ export function LandingPage({ onExplore, onJoin }) {
 
               <article className="story-card">
                 <div className="story-visual media-visual">
-                  <video controls muted playsInline preload="metadata" poster="/assets/cultureloop-festival.jpg">
+                  <video autoPlay loop muted playsInline preload="auto" poster="/assets/cultureloop-festival.jpg">
                     <source src="/assets/cultureloop-festival-3.mp4" type="video/mp4" />
                   </video>
                 </div>
