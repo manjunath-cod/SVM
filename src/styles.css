@@ -3,9 +3,9 @@
 :root {
   --ink: #19182e;
   --muted: #77758a;
-  --purple: #6c4ae4;
-  --purple-hover: #5838cc;
-  --lavender: #f0edfa;
+  --purple: #7652f5;
+  --purple-hover: #6240df;
+  --lavender: #f3f0ff;
   --lavender-light: #f8f6fd;
   --coral: #ff806b;
   --paper: #fbfafc;
@@ -1517,7 +1517,7 @@ h3 {
   color: var(--muted);
 }
 
-/* AI Showcase Layout */
+/* Creative showcase layout */
 .showcase-form-layout {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
@@ -3506,7 +3506,123 @@ h3 {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
 }
+
+/* Student Talent Feed */
+  .talent-feed-page { max-width: 1240px; margin: 0 auto; }
+  .talent-page-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 30px; margin-bottom: 36px; }
+  .talent-page-heading h1 { margin-bottom: 12px; max-width: 700px; }
+  .talent-page-heading h1 em { color: var(--purple); font-family: var(--serif); font-weight: 400; }
+  .talent-demo-badge { display: inline-flex; align-items: center; gap: 9px; color: var(--purple); background: var(--lavender); padding: 11px 14px; border-radius: 30px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .talent-layout { display: grid; grid-template-columns: minmax(0, 1fr) 315px; gap: 28px; align-items: start; }
+  .talent-main-column, .talent-side-column { min-width: 0; }
+  .talent-create-card, .talent-post-card, .talent-side-card { border: 1px solid var(--line); background: var(--card-bg); border-radius: 14px; box-shadow: var(--shadow-sm); }
+  .talent-create-card { padding: 20px; margin-bottom: 36px; }
+  .talent-create-top { display: flex; gap: 13px; align-items: flex-start; }
+  .talent-create-top textarea { flex: 1; resize: vertical; min-height: 55px; border: 0; outline: 0; background: var(--paper-subtle); border-radius: 10px; padding: 14px; color: var(--ink); font-size: 13px; }
+  .talent-avatar { display: inline-grid; flex: 0 0 auto; place-items: center; color: white; border-radius: 50%; font-size: 10px; font-weight: 800; letter-spacing: .03em; }
+  .talent-avatar-medium { width: 42px; height: 42px; }
+  .talent-avatar-small { width: 30px; height: 30px; font-size: 9px; }
+  .talent-upload-preview { position: relative; margin: 15px 0 0 55px; border-radius: 10px; overflow: hidden; background: var(--ink); max-height: 300px; }
+  .talent-upload-preview img, .talent-upload-preview video { display: block; width: 100%; max-height: 300px; object-fit: cover; }
+  .talent-preview-remove { position: absolute; right: 10px; top: 10px; border: 0; padding: 7px 10px; border-radius: 5px; background: rgba(25, 23, 43, .8); color: white; font-size: 11px; }
+  .talent-form-error { color: var(--error); margin: 12px 0 0 55px; font-size: 12px; }
+  .talent-create-options { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding-top: 16px; margin-top: 16px; border-top: 1px solid var(--line); }
+  .talent-upload-button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--muted); font-size: 11px; font-weight: 700; padding: 8px 5px; }
+  .talent-upload-button:hover { color: var(--purple); }
+  .talent-upload-button input { display: none; }
+  .talent-create-options select, .talent-toolbar select { margin-left: auto; height: 36px; border: 1px solid var(--line); border-radius: 7px; padding: 0 10px; color: var(--muted); background: white; font-size: 11px; }
+  .talent-post-button { margin-left: 2px; }
+  .talent-upload-note { margin: 12px 0 0 55px; color: var(--muted); font-size: 10px; }
+  .talent-hashtag-input { width: 100%; margin-top: 12px; border: 0; border-top: 1px solid var(--line); padding: 12px 0 0; outline: 0; color: var(--purple); font-size: 11px; }
+  .talent-section-heading { margin-bottom: 18px; }
+  .talent-section-heading h2 { margin: 0 0 5px; font-size: 27px; }
+  .talent-section-heading p:not(.eyebrow) { margin: 0; color: var(--muted); font-size: 12px; }
+  .talent-toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
+  .talent-search { flex: 1; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 8px; background: white; padding: 0 12px; color: var(--muted); }
+  .talent-search input { width: 100%; height: 38px; border: 0; outline: 0; color: var(--ink); font-size: 11px; }
+  .talent-toolbar select { margin: 0; height: 40px; }
+  .talent-filters { display: flex; gap: 7px; overflow-x: auto; padding: 2px 0 16px; scrollbar-width: thin; }
+  .talent-filters button { border: 1px solid var(--line); border-radius: 20px; background: white; color: var(--muted); padding: 8px 13px; white-space: nowrap; font-size: 10px; font-weight: 700; }
+  .talent-filters button.active, .talent-filters button:hover { border-color: var(--purple); color: var(--purple); background: var(--lavender); }
+  .talent-post-list { display: grid; gap: 18px; }
+  .talent-post-card { overflow: hidden; }
+  .talent-post-header { display: flex; align-items: center; gap: 11px; padding: 17px 18px; }
+  .talent-post-header > div { display: grid; gap: 3px; min-width: 0; }
+  .talent-post-header strong { font-size: 12px; }
+  .talent-post-header span { color: var(--muted); font-size: 10px; }
+  .talent-follow-inline { margin-left: auto; border: 0; background: transparent; color: var(--purple); font-size: 11px; font-weight: 800; }
+  .talent-media { position: relative; background: #e8e5ee; }
+  .talent-media video, .talent-gallery { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+  .talent-media video { height: auto; }
+  .talent-gallery { display: flex; overflow: hidden; }
+  .talent-gallery button { flex: 1; border: 0; padding: 0; min-width: 0; background: none; cursor: zoom-in; }
+  .talent-gallery button + button { border-left: 2px solid white; }
+  .talent-gallery img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .talent-media-badge { position: absolute; top: 14px; right: 14px; display: inline-flex; align-items: center; gap: 4px; background: rgba(25, 23, 43, .72); color: white; border-radius: 20px; padding: 6px 9px; font-size: 10px; font-weight: 700; pointer-events: none; }
+  .talent-post-body { padding: 16px 18px 4px; }
+  .talent-post-body p { margin: 0 0 9px; color: var(--ink); font-size: 13px; line-height: 1.65; }
+  .talent-hashtags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .talent-hashtags span { color: var(--purple); font-size: 11px; font-weight: 700; }
+  .talent-actions { display: flex; gap: 5px; padding: 8px 12px 2px; }
+  .talent-action { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--muted); padding: 8px 7px; font-size: 11px; }
+  .talent-action:hover, .talent-action.liked, .talent-action.saved { color: var(--purple); }
+  .talent-action.liked svg { animation: talent-pop .25s ease; }
+  @keyframes talent-pop { 50% { transform: scale(1.3); } }
+  .talent-share-action { margin-left: auto; }
+  .talent-profile-link { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--muted); margin: 0 18px 16px; padding: 0; font-size: 10px; font-weight: 700; }
+  .talent-profile-link:hover { color: var(--purple); }
+  .talent-side-column { display: grid; gap: 18px; }
+  .talent-side-card { padding: 19px; }
+  .talent-side-title { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; color: var(--purple); }
+  .talent-side-title .eyebrow { margin-bottom: 6px; }
+  .talent-side-title h3 { margin: 0; color: var(--ink); font-size: 18px; }
+  .creator-card { display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: start; padding: 13px 0; border-top: 1px solid var(--line); }
+  .creator-info { min-width: 0; display: grid; gap: 3px; }
+  .creator-info strong { overflow: hidden; text-overflow: ellipsis; font-size: 11px; white-space: nowrap; }
+  .creator-info > span { color: var(--purple); font-size: 10px; font-weight: 700; }
+  .creator-info p { margin: 2px 0 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+  .creator-card .button { min-height: 30px; padding: 0 9px; font-size: 10px; }
+  .popular-card > p { color: var(--muted); font-size: 11px; margin: -5px 0 12px; }
+  .popular-post { width: 100%; display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 9px; border: 0; border-top: 1px solid var(--line); background: none; text-align: left; padding: 13px 0; color: var(--ink); }
+  .popular-post > span { color: var(--purple); font: 11px 'DM Mono', monospace; }
+  .popular-post strong { display: grid; gap: 4px; font-size: 11px; }
+  .popular-post small { color: var(--muted); font-size: 9px; font-weight: 500; }
+  .popular-post > svg { color: var(--muted); }
+  .talent-empty-state { padding: 55px 20px; border: 1px dashed var(--line-strong); border-radius: 14px; text-align: center; color: var(--muted); }
+  .talent-empty-state svg { color: var(--purple); }
+  .talent-empty-state h3 { color: var(--ink); margin: 14px 0 6px; }
+  .talent-empty-state p { margin-bottom: 16px; font-size: 12px; }
+  .talent-comments { display: grid; gap: 15px; max-height: 320px; overflow-y: auto; }
+  .talent-comment { display: flex; gap: 10px; align-items: flex-start; }
+  .talent-comment strong { font-size: 11px; }
+  .talent-comment p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+  .talent-comment-form { display: flex; gap: 8px; margin-top: 20px; }
+  .talent-comment-form input { min-width: 0; flex: 1; border: 1px solid var(--line); border-radius: 7px; padding: 0 11px; font-size: 11px; }
+  .talent-modal-image { display: block; width: 100%; max-height: 70vh; object-fit: contain; border-radius: 8px; background: var(--ink); }
+
+  @media (max-width: 1050px) {
+    .talent-layout { grid-template-columns: 1fr; }
+    .talent-side-column { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .talent-page-heading { display: block; }
+    .talent-demo-badge { margin-top: 18px; }
+    .talent-layout { display: block; }
+    .talent-side-column { display: none; }
+    .talent-create-card { padding: 14px; }
+    .talent-create-top textarea { font-size: 12px; }
+    .talent-create-options { align-items: stretch; }
+    .talent-create-options select { order: 5; width: 100%; margin: 3px 0 0; }
+    .talent-post-button { margin-left: auto; }
+    .talent-upload-preview, .talent-form-error, .talent-upload-note { margin-left: 0; }
+    .talent-toolbar { display: grid; grid-template-columns: 1fr auto; }
+    .talent-search { grid-column: 1 / -1; }
+    .talent-post-header { padding: 14px; }
+    .talent-post-body { padding-left: 14px; padding-right: 14px; }
+    .talent-actions { padding-left: 8px; }
+  }
 
 /* Settings */
 .settings-hero {

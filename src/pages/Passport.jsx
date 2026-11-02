@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../components/Navigation.jsx';
 import { Icon } from '../components/Icons.jsx';
 import { api } from '../services/api.js';
-import { CREATIVE_CATEGORIES } from './Showcase.jsx';
+import { CREATIVE_CATEGORIES } from '../data/talentFeed.js';
 
 export function Passport({ onNavigate }) {
   const [loading, setLoading] = useState(true);
@@ -343,18 +343,18 @@ export function Passport({ onNavigate }) {
         </section>
       </div>
 
-      {/* AI Evaluation History Section */}
+      {/* Creative Growth History Section */}
       <section className="app-panel passport-history-section">
         <div className="section-title-row">
           <div>
             <p className="eyebrow">Milestones & Insights</p>
-            <h2>AI Evaluation Growth History</h2>
+            <h2>Creative Growth History</h2>
           </div>
           <button
             className="text-link"
-            onClick={() => onNavigate('showcase-app')}
+            onClick={() => onNavigate('talent-feed')}
           >
-            New AI Evaluation <Icon name="arrow" size={15} />
+            Share a new talent <Icon name="arrow" size={15} />
           </button>
         </div>
 
@@ -363,8 +363,8 @@ export function Passport({ onNavigate }) {
             <div className="empty-icon">
               <Icon name="spark" size={22} />
             </div>
-            <p>No evaluations recorded yet</p>
-            <span>Submit a piece in the AI Showcase to begin building your evaluated history.</span>
+            <p>No creative milestones recorded yet</p>
+            <span>Share a piece in the Talent Feed to begin building your creative history.</span>
           </div>
         ) : (
           <div className="eval-history-grid">
@@ -432,4 +432,3 @@ export function Passport({ onNavigate }) {
     </div>
   );
 }
-

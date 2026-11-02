@@ -11,25 +11,20 @@ export function Profile({ onSignOut, currentUser, onUserUpdated }) {
   const [yearOfStudy, setYearOfStudy] = useState(currentUser?.year_of_study || '3rd Year');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
-  const [healthStatus, setHealthStatus] = useState(null);
 
   useEffect(() => {
-    loadProfileAndHealth();
+    loadProfile();
   }, []);
 
-  const loadProfileAndHealth = async () => {
+  const loadProfile = async () => {
     try {
-      const [profileRes, healthRes] = await Promise.all([
-        api.getProfile().catch(() => null),
-        api.getHealth().catch(() => null)
-      ]);
+      const profileRes = await api.getProfile().catch(() => null);
       if (profileRes?.profile) {
         setProfile(profileRes.profile);
         setName(profileRes.profile.name);
         setDepartment(profileRes.profile.department);
         setYearOfStudy(profileRes.profile.year_of_study);
       }
-      setHealthStatus(healthRes);
     } catch (err) {
       console.warn('Profile load error:', err);
     }
@@ -165,20 +160,6 @@ export function Profile({ onSignOut, currentUser, onUserUpdated }) {
             </div>
 
             <div className="health-item">
-              <div className={`health-icon ${healthStatus?.geminiConfigured ? 'ok' : 'pending'}`}>
-                <Icon name={healthStatus?.geminiConfigured ? 'checkCircle' : 'info'} size={16} />
-              </div>
-              <div className="health-details">
-                <strong>Google Gemini AI Service</strong>
-                <span>
-                  {healthStatus?.geminiConfigured
-                    ? 'GEMINI_API_KEY detected · Multimodal evaluation active'
-                    : 'Awaiting GEMINI_API_KEY in .env · Safe diagnostics enabled'}
-                </span>
-              </div>
-            </div>
-
-            <div className="health-item">
               <div className="health-icon ok">
                 <Icon name="shield" size={16} />
               </div>
@@ -205,4 +186,3 @@ export function Profile({ onSignOut, currentUser, onUserUpdated }) {
     </div>
   );
 }
-

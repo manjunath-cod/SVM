@@ -6,7 +6,7 @@ import { AppShell } from './components/Navigation.jsx';
 import { LandingPage } from './pages/LandingPage.jsx';
 import { SignIn } from './pages/SignIn.jsx';
 import { Dashboard } from './pages/Dashboard.jsx';
-import { Showcase } from './pages/Showcase.jsx';
+import { TalentFeed } from './pages/TalentFeed.jsx';
 import { Passport } from './pages/Passport.jsx';
 import { Discover } from './pages/Discover.jsx';
 import { Collaborate } from './pages/Collaborate.jsx';
@@ -90,7 +90,7 @@ function App() {
   // Determine active authenticated view
   const authenticatedRoutes = [
     'dashboard',
-    'showcase-app',
+    'talent-feed',
     'passport',
     'discover-app',
     'collaborate',
@@ -124,8 +124,8 @@ function App() {
       switch (activePage) {
         case 'dashboard':
           return <Dashboard onNavigate={navigateTo} currentUser={currentUser} />;
-        case 'showcase-app':
-          return <Showcase onNavigate={navigateTo} currentUser={currentUser} />;
+        case 'talent-feed':
+          return <TalentFeed currentUser={currentUser} />;
         case 'passport':
           return <Passport onNavigate={navigateTo} currentUser={currentUser} />;
         case 'discover-app':
