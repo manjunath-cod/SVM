@@ -118,6 +118,84 @@ function buildAchievementsResponse(userId) {
   };
 }
 
+
+function formatTalentPost(row, currentUserId) {
+  let media = [];
+  try { media = JSON.parse(row.media_json || '[]'); } catch { media = []; }
+  let hashtags = [];
+  try { hashtags = JSON.parse(row.hashtags_json || '[]'); } catch { hashtags = []; }
+  
+  const comments = db.prepare(`
+    SELECT id, post_id, author_name as name, author_initials as initials, text, created_at
+    FROM talent_post_comments
+    WHERE post_id = ?
+    ORDER BY created_at ASC
+  `).all(row.id);
+
+  const authorBadges = db.prepare(`
+    SELECT ua.badge_id as id, ua.unlocked_at
+    FROM user_achievements ua
+    WHERE ua.profile_id = ? AND ua.featured = 1
+    ORDER BY ua.unlocked_at ASC LIMIT 2
+  `).all(row.profile_id).map((ab) => {
+    const badgeDef = SERVER_SVM_BADGES.find((b) => b.id === ab.id);
+    return {
+      id: ab.id,
+      name: badgeDef?.name || ab.id,
+      image: badgeDef?.image || `/images/badges/${ab.id}.png`
+    };
+  });
+
+  const badgeCountRow = db.prepare('SELECT count(*) as count FROM user_achievements WHERE profile_id = ?').get(row.profile_id);
+  const badgeCount = badgeCountRow?.count || 0;
+
+  let isLiked = false;
+  let isSaved = false;
+  let isFollowing = false;
+  if (currentUserId) {
+    const likeRow = db.prepare('SELECT 1 FROM talent_post_likes WHERE post_id = ? AND profile_id = ?').get(row.id, currentUserId);
+    isLiked = Boolean(likeRow);
+    const saveRow = db.prepare('SELECT 1 FROM talent_post_saves WHERE post_id = ? AND profile_id = ?').get(row.id, currentUserId);
+    isSaved = Boolean(saveRow);
+    const followRow = db.prepare('SELECT 1 FROM talent_creator_follows WHERE follower_id = ? AND creator_name = ?').get(currentUserId, row.creator_name);
+    isFollowing = Boolean(followRow);
+  }
+
+  const dateObj = new Date(row.created_at);
+  const now = new Date();
+  const diffHours = Math.floor((now - dateObj) / 3600000);
+  let timestamp = 'Just now';
+  if (diffHours >= 24) {
+    timestamp = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  } else if (diffHours >= 1) {
+    timestamp = `${diffHours}h ago`;
+  }
+
+  return {
+    id: row.id,
+    creator: {
+      name: row.creator_name,
+      initials: row.creator_initials,
+      color: row.creator_color,
+      badges: authorBadges,
+      badgeCount
+    },
+    timestamp,
+    category: row.category,
+    mediaType: row.media_type,
+    media,
+    caption: row.caption,
+    hashtags,
+    likes: row.likes_count,
+    comments,
+    saves: row.saves_count,
+    trending: Boolean(row.trending),
+    isLiked,
+    isSaved,
+    isFollowing
+  };
+}
+
 export async function handleApiRequest(req, res, pathname, queryParams) {
   // Handle CORS Preflight
   if (req.method === 'OPTIONS') {
@@ -505,7 +583,7 @@ export async function handleApiRequest(req, res, pathname, queryParams) {
   }
 
   // 6. Showcase: Query Submissions
-  if (pathname === '/api/showcase/submissions' && req.method === 'GET') {
+  if ((pathname === '/api/showcase/submissions' || pathname === '/api/submissions') && req.method === 'GET') {
     const user = getCurrentUser(req);
     const scope = queryParams.get('scope') || 'all';
     const category = queryParams.get('category');
@@ -565,8 +643,8 @@ export async function handleApiRequest(req, res, pathname, queryParams) {
   }
 
   // 7. Showcase: Get single submission with full evaluation
-  if (pathname.startsWith('/api/showcase/submission/') && req.method === 'GET') {
-    const submissionId = pathname.replace('/api/showcase/submission/', '');
+  if ((pathname.startsWith('/api/showcase/submission/') || (pathname.startsWith('/api/submissions/') && !pathname.endsWith('/evaluate'))) && req.method === 'GET') {
+    const submissionId = pathname.replace('/api/showcase/submission/', '').replace('/api/submissions/', '');
     const submission = db.prepare(`
       SELECT s.*, p.name as author_name, p.department as author_department, p.year_of_study
       FROM submissions s
@@ -597,8 +675,8 @@ export async function handleApiRequest(req, res, pathname, queryParams) {
   }
 
   // 8. Showcase: Re-evaluate Submission with Gemini
-  if (pathname.startsWith('/api/showcase/evaluate/') && req.method === 'POST') {
-    const submissionId = pathname.replace('/api/showcase/evaluate/', '');
+  if ((pathname.startsWith('/api/showcase/evaluate/') || (pathname.startsWith('/api/submissions/') && pathname.endsWith('/evaluate'))) && req.method === 'POST') {
+    const submissionId = pathname.replace('/api/showcase/evaluate/', '').replace('/api/submissions/', '').replace('/evaluate', '');
     const user = getCurrentUser(req);
 
     const submission = db.prepare('SELECT * FROM submissions WHERE id = ?').get(submissionId);
@@ -991,6 +1069,358 @@ export async function handleApiRequest(req, res, pathname, queryParams) {
     }
 
     sendJson(res, 200, { success: true });
+    return true;
+  }
+
+
+  // 17. Student Talent Community Feed API
+  if (pathname === '/api/talent-feed' && req.method === 'GET') {
+    const user = getCurrentUser(req);
+    const category = queryParams.get('category') || 'all';
+    const query = queryParams.get('query') || '';
+    const sort = queryParams.get('sort') || 'latest';
+
+    let sql = 'SELECT * FROM talent_posts WHERE 1=1';
+    const params = [];
+
+    if (category && category !== 'all') {
+      if (category === 'trending') {
+        sql += ' AND trending = 1';
+      } else {
+        sql += ' AND category = ?';
+        params.push(category);
+      }
+    }
+
+    if (query && query.trim()) {
+      sql += ' AND (creator_name LIKE ? OR caption LIKE ? OR hashtags_json LIKE ?)';
+      const term = `%${query.trim()}%`;
+      params.push(term, term, term);
+    }
+
+    if (sort === 'liked') {
+      sql += ' ORDER BY likes_count DESC, created_at DESC';
+    } else {
+      sql += ' ORDER BY created_at DESC';
+    }
+
+    const rows = db.prepare(sql).all(...params);
+    let posts = rows.map((r) => formatTalentPost(r, user.id));
+
+    if (sort === 'discussed') {
+      posts.sort((a, b) => b.comments.length - a.comments.length);
+    }
+
+    sendJson(res, 200, { posts });
+    return true;
+  }
+
+  if (pathname === '/api/talent-feed/post' && req.method === 'POST') {
+    const user = getCurrentUser(req);
+    const body = await parseJsonBody(req);
+    const { caption, hashtags, category, mediaType, fileBase64, fileName, preview } = body;
+
+    let mediaUrls = [];
+    if (fileBase64 && fileName) {
+      const base64Data = fileBase64.replace(/^data:[^;]+;base64,/, '');
+      const buffer = Buffer.from(base64Data, 'base64');
+      const ext = path.extname(fileName) || (mediaType === 'video' ? '.mp4' : '.jpg');
+      const safeName = `talent-${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`;
+      const savePath = path.join(UPLOADS_DIR, safeName);
+      fs.writeFileSync(savePath, buffer);
+      mediaUrls.push(`/api/media/${safeName}`);
+    } else if (preview) {
+      mediaUrls.push(preview);
+    } else if (Array.isArray(body.media) && body.media.length > 0) {
+      mediaUrls = body.media;
+    }
+
+    const postId = `post-${Date.now()}`;
+    const initials = (user.name || 'You').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
+    const tags = Array.isArray(hashtags)
+      ? hashtags
+      : typeof hashtags === 'string'
+        ? hashtags.split(/[,s]+/).filter(Boolean).map((t) => t.startsWith('#') ? t : `#${t}`)
+        : [];
+
+    const now = new Date().toISOString();
+    db.prepare(`
+      INSERT INTO talent_posts (id, profile_id, creator_name, creator_initials, creator_color, category, media_type, media_json, caption, hashtags_json, likes_count, saves_count, trending, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, ?)
+    `).run(
+      postId,
+      user.id,
+      user.name,
+      initials,
+      '#7652F5',
+      category || 'singing',
+      mediaType || 'image',
+      JSON.stringify(mediaUrls),
+      caption || '',
+      JSON.stringify(tags),
+      now
+    );
+
+    syncUserAchievements(user.id);
+    const row = db.prepare('SELECT * FROM talent_posts WHERE id = ?').get(postId);
+    const post = formatTalentPost(row, user.id);
+    sendJson(res, 201, { success: true, post });
+    return true;
+  }
+
+  if (pathname.startsWith('/api/talent-feed/') && pathname.endsWith('/like') && req.method === 'POST') {
+    const user = getCurrentUser(req);
+    const postId = pathname.replace('/api/talent-feed/', '').replace('/like', '');
+    const post = db.prepare('SELECT * FROM talent_posts WHERE id = ?').get(postId);
+    if (!post) {
+      sendJson(res, 404, { error: 'Post not found' });
+      return true;
+    }
+
+    const existing = db.prepare('SELECT id FROM talent_post_likes WHERE post_id = ? AND profile_id = ?').get(postId, user.id);
+    let liked = false;
+    let nextLikes = post.likes_count;
+
+    if (existing) {
+      db.prepare('DELETE FROM talent_post_likes WHERE id = ?').run(existing.id);
+      nextLikes = Math.max(0, post.likes_count - 1);
+      db.prepare('UPDATE talent_posts SET likes_count = ? WHERE id = ?').run(nextLikes, postId);
+      liked = false;
+    } else {
+      const likeId = `like-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+      db.prepare('INSERT INTO talent_post_likes (id, post_id, profile_id, created_at) VALUES (?, ?, ?, ?)').run(likeId, postId, user.id, new Date().toISOString());
+      nextLikes = post.likes_count + 1;
+      db.prepare('UPDATE talent_posts SET likes_count = ? WHERE id = ?').run(nextLikes, postId);
+      liked = true;
+    }
+
+    sendJson(res, 200, { success: true, post_id: postId, likes: nextLikes, liked });
+    return true;
+  }
+
+  if (pathname.startsWith('/api/talent-feed/') && pathname.endsWith('/comment') && req.method === 'POST') {
+    const user = getCurrentUser(req);
+    const postId = pathname.replace('/api/talent-feed/', '').replace('/comment', '');
+    const body = await parseJsonBody(req);
+
+    if (!body.text || !body.text.trim()) {
+      sendJson(res, 400, { error: 'Comment text is required' });
+      return true;
+    }
+
+    const post = db.prepare('SELECT id FROM talent_posts WHERE id = ?').get(postId);
+    if (!post) {
+      sendJson(res, 404, { error: 'Post not found' });
+      return true;
+    }
+
+    const commentId = `comm-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+    const initials = (user.name || 'You').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO talent_post_comments (id, post_id, profile_id, author_name, author_initials, text, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(commentId, postId, user.id, user.name || 'You', initials, body.text.trim(), now);
+
+    const countRow = db.prepare('SELECT count(*) as count FROM talent_post_comments WHERE post_id = ?').get(postId);
+
+    sendJson(res, 201, {
+      success: true,
+      comment: {
+        id: commentId,
+        name: user.name || 'You',
+        initials,
+        text: body.text.trim(),
+        created_at: now
+      },
+      commentsCount: countRow?.count || 1
+    });
+    return true;
+  }
+
+  if (pathname.startsWith('/api/talent-feed/') && pathname.endsWith('/save') && req.method === 'POST') {
+    const user = getCurrentUser(req);
+    const postId = pathname.replace('/api/talent-feed/', '').replace('/save', '');
+    const post = db.prepare('SELECT * FROM talent_posts WHERE id = ?').get(postId);
+    if (!post) {
+      sendJson(res, 404, { error: 'Post not found' });
+      return true;
+    }
+
+    const existing = db.prepare('SELECT id FROM talent_post_saves WHERE post_id = ? AND profile_id = ?').get(postId, user.id);
+    let saved = false;
+
+    if (existing) {
+      db.prepare('DELETE FROM talent_post_saves WHERE id = ?').run(existing.id);
+      db.prepare('UPDATE talent_posts SET saves_count = MAX(0, saves_count - 1) WHERE id = ?').run(postId);
+      saved = false;
+    } else {
+      const saveId = `save-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+      db.prepare('INSERT INTO talent_post_saves (id, post_id, profile_id, created_at) VALUES (?, ?, ?, ?)').run(saveId, postId, user.id, new Date().toISOString());
+      db.prepare('UPDATE talent_posts SET saves_count = saves_count + 1 WHERE id = ?').run(postId);
+      saved = true;
+    }
+
+    sendJson(res, 200, { success: true, post_id: postId, saved });
+    return true;
+  }
+
+  if (pathname.startsWith('/api/talent-feed/creators/') && pathname.endsWith('/follow') && req.method === 'POST') {
+    const user = getCurrentUser(req);
+    const creatorName = decodeURIComponent(pathname.replace('/api/talent-feed/creators/', '').replace('/follow', ''));
+
+    const existing = db.prepare('SELECT id FROM talent_creator_follows WHERE follower_id = ? AND creator_name = ?').get(user.id, creatorName);
+    let following = false;
+
+    if (existing) {
+      db.prepare('DELETE FROM talent_creator_follows WHERE id = ?').run(existing.id);
+      following = false;
+    } else {
+      const followId = `fol-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+      db.prepare('INSERT INTO talent_creator_follows (id, follower_id, creator_name, created_at) VALUES (?, ?, ?, ?)').run(followId, user.id, creatorName, new Date().toISOString());
+      following = true;
+    }
+
+    sendJson(res, 200, { success: true, creator_name: creatorName, following });
+    return true;
+  }
+
+  if (pathname === '/api/talent-feed/popular' && req.method === 'GET') {
+    const rows = db.prepare('SELECT * FROM talent_posts ORDER BY likes_count DESC LIMIT 3').all();
+    const popular = rows.map((r) => formatTalentPost(r, null));
+    sendJson(res, 200, { popular });
+    return true;
+  }
+
+  if (pathname === '/api/talent-feed/creators' && req.method === 'GET') {
+    const user = getCurrentUser(req);
+    const creators = [
+      { name: 'Meera Sengupta', initials: 'MS', color: '#7652F5', category: 'Photography & Poetry', bio: 'Finding stories in ordinary places.', profile_id: 'meera.s@svmit.ac.in' },
+      { name: 'Aarav Sharma', initials: 'AS', color: '#E17865', category: 'Music & Film', bio: 'Learning, layering and sharing melodies.', profile_id: 'student@svmit.ac.in' },
+      { name: 'Rohit Kulkarni', initials: 'RK', color: '#2D9CDB', category: 'Art & Dance', bio: 'Sketchbooks, color studies and body rhythm.', profile_id: 'rohit.k@svmit.ac.in' },
+      { name: 'Kavya Patil', initials: 'KP', color: '#43A47A', category: 'Vocals', bio: 'Classical and contemporary vocal exploration.', profile_id: 'kavya.p@svmit.ac.in' }
+    ];
+
+    const enriched = creators.map((c) => {
+      const badges = db.prepare(`
+        SELECT ua.badge_id as id, ua.unlocked_at
+        FROM user_achievements ua
+        WHERE ua.profile_id = ? AND ua.featured = 1
+        LIMIT 2
+      `).all(c.profile_id).map((ab) => {
+        const badgeDef = SERVER_SVM_BADGES.find((b) => b.id === ab.id);
+        return { id: ab.id, name: badgeDef?.name || ab.id, image: badgeDef?.image || `/images/badges/${ab.id}.png` };
+      });
+
+      const badgeCountRow = db.prepare('SELECT count(*) as count FROM user_achievements WHERE profile_id = ?').get(c.profile_id);
+      const isFollowing = db.prepare('SELECT 1 FROM talent_creator_follows WHERE follower_id = ? AND creator_name = ?').get(user.id, c.name);
+
+      return {
+        ...c,
+        badges,
+        badgeCount: badgeCountRow?.count || 0,
+        following: Boolean(isFollowing)
+      };
+    });
+
+    sendJson(res, 200, { creators: enriched });
+    return true;
+  }
+
+  // 18. Admin Directorate & Approval Workflow API
+  if (pathname === '/api/admin/students' && req.method === 'GET') {
+    const status = queryParams.get('status');
+    let sql = "SELECT id, name, email, department, academic_year, role, approval_status, created_at FROM profiles WHERE role != 'admin'";
+    const params = [];
+    if (status) {
+      sql += ' AND approval_status = ?';
+      params.push(status);
+    }
+    sql += ' ORDER BY created_at DESC';
+    const students = db.prepare(sql).all(...params);
+    sendJson(res, 200, { students });
+    return true;
+  }
+
+  if (pathname.startsWith('/api/admin/students/') && pathname.endsWith('/status') && req.method === 'POST') {
+    const studentId = decodeURIComponent(pathname.replace('/api/admin/students/', '').replace('/status', ''));
+    const body = await parseJsonBody(req);
+    const { status, notes } = body;
+
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+      sendJson(res, 400, { error: 'Invalid approval status' });
+      return true;
+    }
+
+    db.prepare('UPDATE profiles SET approval_status = ?, updated_at = ? WHERE id = ?').run(status, new Date().toISOString(), studentId);
+
+    const logId = `log-${Date.now()}`;
+    db.prepare(`
+      INSERT INTO admin_logs (id, admin_id, admin_name, action, target_type, target_id, details, created_at)
+      VALUES (?, ?, ?, ?, 'student', ?, ?, ?)
+    `).run(
+      logId,
+      'admin@svmit.ac.in',
+      'SVM Cultural Directorate',
+      `STUDENT_${status.toUpperCase()}`,
+      studentId,
+      notes || `Status updated to ${status}`,
+      new Date().toISOString()
+    );
+
+    sendJson(res, 200, { success: true, studentId, status });
+    return true;
+  }
+
+  if (pathname === '/api/admin/announcements') {
+    if (req.method === 'GET') {
+      const rows = db.prepare('SELECT * FROM announcements WHERE archived = 0 ORDER BY created_at DESC').all();
+      sendJson(res, 200, { announcements: rows });
+      return true;
+    }
+
+    if (req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      const { title, category, priority, content } = body;
+      if (!title || !content) {
+        sendJson(res, 400, { error: 'Title and content are required' });
+        return true;
+      }
+      const annId = `ann-${Date.now()}`;
+      const now = new Date().toISOString();
+      db.prepare(`
+        INSERT INTO announcements (id, title, category, priority, content, author_name, archived, created_at)
+        VALUES (?, ?, ?, ?, ?, 'SVM Cultural Directorate', 0, ?)
+      `).run(annId, title, category || 'Auditions', priority || 'Normal', content, now);
+
+      sendJson(res, 201, { success: true, announcement: { id: annId, title, category, priority, content, created_at: now } });
+      return true;
+    }
+  }
+
+  if (pathname.startsWith('/api/admin/announcements/') && req.method === 'DELETE') {
+    const annId = pathname.replace('/api/admin/announcements/', '');
+    db.prepare('UPDATE announcements SET archived = 1 WHERE id = ?').run(annId);
+    sendJson(res, 200, { success: true, id: annId });
+    return true;
+  }
+
+  if (pathname === '/api/admin/logs' && req.method === 'GET') {
+    const logs = db.prepare('SELECT * FROM admin_logs ORDER BY created_at DESC LIMIT 50').all();
+    sendJson(res, 200, { logs });
+    return true;
+  }
+
+  if (pathname === '/api/admin/login' && req.method === 'POST') {
+    const body = await parseJsonBody(req);
+    const { email } = body;
+    const admin = db.prepare("SELECT * FROM profiles WHERE email = ? AND role = 'admin'").get(email || 'admin@svmit.ac.in');
+    if (!admin) {
+      sendJson(res, 401, { error: 'Invalid admin credentials or not authorized as admin.' });
+      return true;
+    }
+    sendJson(res, 200, { success: true, user: admin });
     return true;
   }
 
