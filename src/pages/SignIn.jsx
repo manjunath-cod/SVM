@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
-import { Icon, Logo } from '../components/Icons.jsx';
-import { firebaseConfigured } from '../services/firebase.js';
-import { register, resetPassword, signIn, signInWithGoogle } from '../services/auth.js';
+import React, { useState, useEffect } from 'react';
+import { Logo, Icon } from '../components/Icons.jsx';
+import {
+  signInStudent,
+  signInWithGoogle,
+  resetPassword,
+  formatAuthError
+} from '../services/auth.js';
+import { testFirebaseConnection } from '../services/firebase.js';
 
 const DEMO_PERSONAS = [
   { name: 'Ananya Sharma', email: 'ananya.s@svmit.ac.in', discipline: 'Vocal Music', department: 'Computer Science', year: '3rd Year' },
@@ -11,84 +16,94 @@ const DEMO_PERSONAS = [
 ];
 
 export function SignIn({ onSignedIn }) {
-  const [mode, setMode] = useState('signin');
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-    displayName: '',
-    department: 'Computer Science',
-    academicYear: '3rd Year'
-  });
-  const [status, setStatus] = useState({ type: '', message: '' });
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
+  const [connStatus, setConnStatus] = useState(null);
 
-  const update = (key) => (event) => setForm((curr) => ({ ...curr, [key]: event.target.value }));
+  useEffect(() => {
+    testFirebaseConnection().then(setConnStatus).catch(() => {});
+  }, []);
 
-  const handleLocalSignIn = (customEmail, customName, department, year) => {
-    const user = {
-      id: 'student-' + Math.abs(customEmail.split('').reduce((acc, c) => acc * 31 + c.charCodeAt(0), 0) % 10000),
-      uid: 'student-demo',
-      name: customName || customEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-      displayName: customName || customEmail.split('@')[0],
-      email: customEmail,
-      department: department || 'Engineering',
-      year_of_study: year || '3rd Year',
-      academicYear: year || '3rd Year'
-    };
-    onSignedIn?.(user);
+  const update = (field) => (e) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    if (error) setError('');
+    if (notice) setNotice('');
   };
 
-  const handlePersonaSelect = (p) => {
-    handleLocalSignIn(p.email, p.name, p.department, p.year);
-  };
+  const handleSuccessfulAuth = (result) => {
+    const user = result.user || result;
+    const approvalStatus = result.approvalStatus || user.approvalStatus || 'approved';
 
-  const submit = async (event) => {
-    event.preventDefault();
-    setLoading(true);
-    setStatus({ type: '', message: '' });
-
-    if (firebaseConfigured) {
-      try {
-        let user;
-        if (mode === 'register') {
-          user = await register(form);
-        } else {
-          user = await signIn(form.email, form.password);
-        }
-        onSignedIn?.(user);
-        return;
-      } catch (error) {
-        console.warn('Firebase Auth notice:', error);
-        let message = error.code === 'auth/invalid-credential' ? 'Email or password is incorrect.' : error.message;
-        if (
-          error.code === 'auth/api-key-not-valid' ||
-          error.code === 'auth/api-key-not-supported' ||
-          error.code === 'auth/api-keys-are-not-supported-by-this-api' ||
-          error.code === 'auth/configuration-not-found'
-        ) {
-          message = 'Firebase Web API key in .env needs activation in Firebase Console. You can enter in Campus Demo Mode below.';
-        }
-        setStatus({ type: 'error', message });
-        setLoading(false);
-        return;
-      }
+    if (approvalStatus === 'pending') {
+      onSignedIn?.(user);
+      window.location.hash = 'pending-approval';
+      return;
     }
 
-    handleLocalSignIn(form.email || 'student@svmit.ac.in', form.displayName || 'SVM Student', form.department, form.academicYear);
-    setLoading(false);
+    if (approvalStatus === 'rejected') {
+      setError('Your student registration was rejected by the administrator. Please contact the SVM coordinator.');
+      return;
+    }
+
+    onSignedIn?.(user);
+    window.location.hash = 'dashboard';
   };
 
-  const handleGoogleAuth = async () => {
-    if (!firebaseConfigured) {
-      handleLocalSignIn('google.student@svmit.ac.in', 'Google Student User');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setNotice('');
+    setLoading(true);
+
+    try {
+      const result = await signInStudent(form.email, form.password);
+      handleSuccessfulAuth(result);
+    } catch (err) {
+      setError(formatAuthError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setNotice('');
+    setLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      handleSuccessfulAuth(result);
+    } catch (err) {
+      setError(formatAuthError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!form.email.trim()) {
+      setError('Please enter your college email first to reset your password.');
       return;
     }
     setLoading(true);
     try {
-      const user = await signInWithGoogle();
-      onSignedIn?.(user);
+      await resetPassword(form.email);
+      setNotice('Password reset email sent. Please check your inbox.');
     } catch (err) {
-      setStatus({ type: 'error', message: err.message || 'Google sign-in was not completed.' });
+      setError(formatAuthError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePersonaSelect = async (p) => {
+    setLoading(true);
+    try {
+      const result = await signInStudent(p.email, 'demo-password');
+      handleSuccessfulAuth(result);
+    } catch (err) {
+      setError(formatAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -97,111 +112,121 @@ export function SignIn({ onSignedIn }) {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <Logo href="#top" />
+        <Logo href="#landing" />
         <p className="eyebrow">SVM Student Portal</p>
         <h1>
-          {mode === 'register' ? (
-            <>Create your <em>creative space.</em></>
-          ) : (
-            <>Make room for your <em>next idea.</em></>
-          )}
+          Make room for your <em>next idea.</em>
         </h1>
         <p className="auth-copy">
-          Use your SVM credentials or campus demo access to discover opportunities, share work, and find collaborators.
+          Sign in to discover campus opportunities, share your creative work for AI evaluation, and find collaborators across SVM.
         </p>
 
-        {firebaseConfigured ? (
-          <div className="auth-mode-indicator cloud">
-            <Icon name="checkCircle" size={14} />
-            <span>Firebase Cloud Sync connected</span>
-          </div>
-        ) : (
-          <div className="auth-mode-indicator local">
-            <Icon name="shield" size={14} />
-            <span>Campus Demo Mode active · Instant local evaluation & persistence</span>
+        {/* Real-time Connection Indicator */}
+        {connStatus && (
+          <div className={`auth-mode-indicator ${connStatus.connected ? 'cloud' : 'local'}`}>
+            <Icon name={connStatus.connected ? 'checkCircle' : 'shield'} size={14} />
+            <span>{connStatus.message}</span>
           </div>
         )}
 
-        <form onSubmit={submit}>
-          {mode === 'register' && (
-            <>
-              <label htmlFor="display-name">Full name</label>
-              <input
-                id="display-name"
-                value={form.displayName}
-                onChange={update('displayName')}
-                placeholder="Ananya Sharma"
-                required
-              />
-              <label htmlFor="department">Department</label>
-              <input
-                id="department"
-                value={form.department}
-                onChange={update('department')}
-                placeholder="Computer Science & Engineering"
-              />
-              <label htmlFor="academic-year">Academic year</label>
-              <input
-                id="academic-year"
-                value={form.academicYear}
-                onChange={update('academicYear')}
-                placeholder="3rd Year"
-              />
-            </>
-          )}
+        {error && (
+          <div className="auth-error-box" role="alert">
+            <Icon name="alert" size={16} />
+            <div className="auth-error-content">
+              <strong>Authentication Error</strong>
+              <p>{error}</p>
+              {error.includes('Identity Toolkit') && (
+                <button
+                  type="button"
+                  className="button button-light btn-sm mt-2"
+                  onClick={() => handlePersonaSelect(DEMO_PERSONAS[0])}
+                >
+                  Enter in Campus Demo Mode while API Key is updated
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
-          <label htmlFor="student-email">College email</label>
-          <input
-            id="student-email"
-            type="email"
-            placeholder="you@svmit.ac.in"
-            value={form.email}
-            onChange={update('email')}
-            required
-          />
+        {notice && (
+          <div className="auth-notice-box" role="status">
+            <Icon name="checkCircle" size={15} />
+            <span>{notice}</span>
+          </div>
+        )}
 
-          <label htmlFor="student-password">
-            Password {firebaseConfigured ? '' : '(Optional in demo mode)'}
-          </label>
-          <input
-            id="student-password"
-            type="password"
-            placeholder="••••••••"
-            minLength={firebaseConfigured ? 6 : 1}
-            value={form.password}
-            onChange={update('password')}
-            required={firebaseConfigured && mode !== 'reset'}
-          />
+        <form onSubmit={handleSubmit} className="auth-form-stacked">
+          <div className="form-group">
+            <label htmlFor="student-email">College Email Address</label>
+            <input
+              id="student-email"
+              type="email"
+              placeholder="you@svmit.ac.in"
+              value={form.email}
+              onChange={update('email')}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <div className="label-with-action">
+              <label htmlFor="student-password">Password</label>
+              <button
+                type="button"
+                className="text-link small-link"
+                onClick={handleForgotPassword}
+              >
+                Forgot password?
+              </button>
+            </div>
+            <input
+              id="student-password"
+              type="password"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={update('password')}
+              required
+            />
+          </div>
 
           <button className="button button-dark full-width" type="submit" disabled={loading}>
-            {loading
-              ? 'Connecting...'
-              : mode === 'register'
-              ? 'Create student account'
-              : firebaseConfigured
-              ? 'Continue to CultureLoop'
-              : 'Enter CultureLoop'} <Icon name="arrow" size={16} />
+            {loading ? 'Authenticating...' : 'Sign In to SVM Portal'} <Icon name="arrow" size={16} />
           </button>
         </form>
 
-        {status.message && (
-          <div className={status.type === 'error' ? 'auth-error' : 'auth-note'} role="alert">
-            {status.message}
-            {status.type === 'error' && (
-              <button
-                type="button"
-                className="button button-light btn-sm"
-                style={{ marginTop: '8px', display: 'block', width: '100%' }}
-                onClick={() => handleLocalSignIn(form.email || 'reviewer@svmit.ac.in', 'SVM Guest Creator')}
-              >
-                Enter in Campus Demo Mode instead
-              </button>
-            )}
-          </div>
-        )}
+        <div className="auth-divider">
+          <span>or continue with</span>
+        </div>
+
+        <button
+          type="button"
+          className="button button-light full-width google-btn"
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+        >
+          <svg className="google-icon" viewBox="0 0 24 24" width="16" height="16">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+            />
+          </svg>
+          <span>Continue with Google</span>
+        </button>
 
         <div className="demo-personas-section">
-          <span className="demo-label">Quick Access · Continue with a Student Persona:</span>
+          <span className="demo-label">Quick Demo Access · Sign In as Student Persona:</span>
           <div className="demo-personas-grid">
             {DEMO_PERSONAS.map((p) => (
               <button
@@ -209,7 +234,7 @@ export function SignIn({ onSignedIn }) {
                 type="button"
                 className="persona-chip"
                 onClick={() => handlePersonaSelect(p)}
-                title={`Enter as ${p.name} (${p.discipline})`}
+                title={`Sign in as ${p.name} (${p.discipline})`}
               >
                 <strong>{p.name}</strong>
                 <span>{p.discipline}</span>
@@ -218,22 +243,17 @@ export function SignIn({ onSignedIn }) {
           </div>
         </div>
 
-        <div className="auth-secondary-actions">
-          <button
-            type="button"
-            className="text-link"
-            onClick={handleGoogleAuth}
-            disabled={loading}
-          >
-            Continue with Google
-          </button>
-          <button
-            type="button"
-            className="text-link"
-            onClick={() => setMode(mode === 'signin' ? 'register' : 'signin')}
-          >
-            {mode === 'signin' ? 'Create a student account' : 'I already have an account'}
-          </button>
+        <div className="auth-footer-links">
+          <span>New student at SVM?</span>
+          <a href="#signup" className="text-link">
+            Create an account <Icon name="arrow" size={14} />
+          </a>
+        </div>
+
+        <div className="admin-portal-link-row">
+          <a href="#admin/login" className="admin-portal-hint">
+            <Icon name="shield" size={13} /> SVM Staff & Administrator Portal
+          </a>
         </div>
       </div>
 
@@ -242,6 +262,8 @@ export function SignIn({ onSignedIn }) {
           CREATIVE
           <br />
           <strong>ENERGY</strong>
+          <br />
+          SVM
         </span>
         <div className="auth-art-card">
           Find your

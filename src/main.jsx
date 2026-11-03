@@ -13,16 +13,21 @@ import { Collaborate } from './pages/Collaborate.jsx';
 import { Events } from './pages/Events.jsx';
 import { Portfolio } from './pages/Portfolio.jsx';
 import { Settings } from './pages/Settings.jsx';
+import { SignIn } from './pages/SignIn.jsx';
+import { SignUp } from './pages/SignUp.jsx';
+import { PendingApproval } from './pages/PendingApproval.jsx';
+import { AdminLogin } from './pages/AdminLogin.jsx';
+import { AdminDashboard } from './pages/AdminDashboard.jsx';
+
 import { subscribeToAuth, signOut } from './services/auth.js';
 import { getUserProfile } from './services/firestore.js';
 import { firebaseConfigured } from './services/firebase.js';
-import { SignIn } from './pages/SignIn.jsx';
 
 function App() {
   const [route, setRoute] = useState(() => window.location.hash.replace('#', '') || 'landing');
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const saved = localStorage.getItem('cultureloop-user');
+      const saved = localStorage.getItem('cultureloop-user') || localStorage.getItem('svm_active_session');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -40,15 +45,17 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  // Listen to Firebase Auth state
   useEffect(() => {
     if (!firebaseConfigured) {
       setAuthLoading(false);
       return undefined;
     }
+
     return subscribeToAuth(async (user) => {
       if (!user) {
-        // If not authenticated via Firebase, check if user had a local demo session
-        const localSaved = localStorage.getItem('cultureloop-user');
+        // Fallback to local session if present
+        const localSaved = localStorage.getItem('cultureloop-user') || localStorage.getItem('svm_active_session');
         if (localSaved) {
           try {
             setCurrentUser(JSON.parse(localSaved));
@@ -61,17 +68,22 @@ function App() {
         setAuthLoading(false);
         return;
       }
+
       try {
         const profile = await getUserProfile(user.uid);
         const resolved = profile || {
           id: user.uid,
           uid: user.uid,
           name: user.displayName || 'SVM Student',
-          email: user.email || ''
+          displayName: user.displayName || 'SVM Student',
+          email: user.email || '',
+          role: 'student',
+          approvalStatus: 'approved'
         };
         setCurrentUser(resolved);
         try {
           localStorage.setItem('cultureloop-user', JSON.stringify(resolved));
+          localStorage.setItem('svm_active_session', JSON.stringify(resolved));
           localStorage.setItem('cultureloop-user-email', resolved.email || '');
         } catch { /* ignore */ }
       } catch {
@@ -79,7 +91,9 @@ function App() {
           id: user.uid,
           uid: user.uid,
           name: user.displayName || 'SVM Student',
-          email: user.email || ''
+          email: user.email || '',
+          role: 'student',
+          approvalStatus: 'approved'
         };
         setCurrentUser(fallback);
       }
@@ -87,6 +101,7 @@ function App() {
     });
   }, []);
 
+  // Theme support
   useEffect(() => {
     const preference = localStorage.getItem('cultureloop-theme') || 'light';
     const media = window.matchMedia('(prefers-color-scheme: dark)');
@@ -102,18 +117,15 @@ function App() {
   }, []);
 
   const handleSignOut = async () => {
-    if (firebaseConfigured) {
-      try {
-        await signOut();
-      } catch { /* ignore */ }
-    }
+    await signOut();
     try {
       localStorage.removeItem('cultureloop-user');
+      localStorage.removeItem('svm_active_session');
       localStorage.removeItem('cultureloop-user-email');
       localStorage.removeItem('cultureloop-session');
     } catch { /* ignore */ }
     setCurrentUser(null);
-    window.location.hash = 'top';
+    window.location.hash = 'landing';
   };
 
   const handleUserSignedIn = (user) => {
@@ -121,9 +133,20 @@ function App() {
       setCurrentUser(user);
       try {
         localStorage.setItem('cultureloop-user', JSON.stringify(user));
+        localStorage.setItem('svm_active_session', JSON.stringify(user));
         localStorage.setItem('cultureloop-user-email', user.email || '');
         localStorage.setItem('cultureloop-session', 'active');
       } catch { /* ignore */ }
+
+      // Role and approval routing
+      if (user.role === 'admin') {
+        window.location.hash = 'admin';
+        return;
+      }
+      if (user.approvalStatus === 'pending') {
+        window.location.hash = 'pending-approval';
+        return;
+      }
     }
     window.location.hash = 'dashboard';
   };
@@ -132,7 +155,7 @@ function App() {
     window.location.hash = pageId;
   };
 
-  // Determine active authenticated view
+  // Protected student routes
   const authenticatedRoutes = [
     'dashboard',
     'talent-feed',
@@ -154,15 +177,57 @@ function App() {
     );
   }
 
+  // Route 1: Student Registration
+  if (route === 'signup') {
+    return <SignUp onRegistered={handleUserSignedIn} />;
+  }
+
+  // Route 2: Student Sign In
   if (route === 'signin') {
     return <SignIn onSignedIn={handleUserSignedIn} />;
   }
 
-  if (authenticatedRoutes.includes(route) && !currentUser) {
-    return <SignIn onSignedIn={handleUserSignedIn} />;
+  // Route 3: Pending Approval Screen
+  if (route === 'pending-approval') {
+    return (
+      <PendingApproval
+        currentUser={currentUser}
+        onApproved={handleUserSignedIn}
+        onSignOut={handleSignOut}
+      />
+    );
   }
 
+  // Route 4: Administrator Login
+  if (route === 'admin/login') {
+    return <AdminLogin onAdminSignedIn={handleUserSignedIn} />;
+  }
+
+  // Route 5: Administrator Dashboard
+  if (route === 'admin') {
+    if (currentUser?.role === 'admin') {
+      return <AdminDashboard currentUser={currentUser} onSignOut={handleSignOut} />;
+    }
+    // If not signed in as admin, show admin login
+    return <AdminLogin onAdminSignedIn={handleUserSignedIn} />;
+  }
+
+  // Guard: If accessing student protected routes
   if (authenticatedRoutes.includes(route)) {
+    if (!currentUser) {
+      return <SignIn onSignedIn={handleUserSignedIn} />;
+    }
+
+    if (currentUser.approvalStatus === 'pending') {
+      return (
+        <PendingApproval
+          currentUser={currentUser}
+          onApproved={handleUserSignedIn}
+          onSignOut={handleSignOut}
+        />
+      );
+    }
+
     const activePage = authenticatedRoutes.includes(route) ? route : 'dashboard';
 
     const renderActivePage = () => {
@@ -193,6 +258,7 @@ function App() {
                 setCurrentUser(u);
                 try {
                   localStorage.setItem('cultureloop-user', JSON.stringify(u));
+                  localStorage.setItem('svm_active_session', JSON.stringify(u));
                 } catch { /* ignore */ }
               }}
             />
@@ -214,10 +280,10 @@ function App() {
     );
   }
 
-  // Public Landing Page
+  // Public Landing Page (default)
   return (
     <LandingPage
-      onExplore={() => navigateTo('dashboard')}
+      onExplore={() => navigateTo('signin')}
     />
   );
 }

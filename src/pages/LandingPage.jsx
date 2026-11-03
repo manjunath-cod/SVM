@@ -51,7 +51,7 @@ export function LandingPage({ onExplore }) {
             </div>
           </nav>
           <div className="header-actions">
-            <a className="sign-in" href="#dashboard">Student Portal</a>
+            <a className="sign-in" href="#signin">Student Portal</a>
             <button className="button button-dark header-cta" onClick={() => setJoinOpen(true)}>
               Join SVM <Icon name="arrow" size={16} />
             </button>
@@ -309,7 +309,7 @@ export function LandingPage({ onExplore }) {
               </h2>
             </div>
             <button className="button button-light" onClick={() => setJoinOpen(true)}>
-              Join CultureLoop <Icon name="arrow" size={17} />
+              Join SVM <Icon name="arrow" size={17} />
             </button>
           </div>
         </section>
@@ -327,6 +327,7 @@ export function LandingPage({ onExplore }) {
             <a href="#discover">Discover</a>
             <a href="#opportunities">Opportunities</a>
             <a href="#showcase">Showcase</a>
+            <a href="#admin/login">Staff Portal</a>
           </div>
           <div className="footer-social">
             <a href="#instagram" aria-label="Instagram">
@@ -344,7 +345,7 @@ export function LandingPage({ onExplore }) {
           setJoinOpen(false);
           setJoinSubmitted(false);
         }}
-        eyebrow="Join SVM CultureLoop"
+        eyebrow="Join SVM ? Sangeeta Vrinda Madhyam"
         title={joinSubmitted ? "You're on the list." : "Find your place in the creative community."}
       >
         {joinSubmitted ? (
@@ -352,7 +353,7 @@ export function LandingPage({ onExplore }) {
             <span className="success-icon">
               <Icon name="check" size={24} />
             </span>
-            <p>We’ll help you find your creative people when CultureLoop opens at SVM.</p>
+            <p>We’ll help you find your creative people in the SVM creative community.</p>
             <button className="button button-dark" onClick={() => setJoinOpen(false)}>
               Done
             </button>

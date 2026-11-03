@@ -10,48 +10,83 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return signedIn() && request.auth.token.admin == true;
+      return signedIn() && (
+        request.auth.token.admin == true ||
+        request.auth.token.email in ['admin@svm.kle.edu', 'cultural-head@svm.kle.edu'] ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
     }
 
     match /users/{userId} {
-      allow read: if signedIn() && (isOwner(userId) || resource.data.profileVisibility == 'campus');
-      allow create: if isOwner(userId) && request.resource.data.uid == request.auth.uid;
-      allow update: if isOwner(userId)
+      allow read: if signedIn() && (isOwner(userId) || isAdmin() || resource.data.profileVisibility == 'campus');
+      // Students can only register themselves as role 'student' and approvalStatus 'pending'
+      allow create: if isOwner(userId) && request.resource.data.uid == request.auth.uid
+        && (request.resource.data.role == 'student' || isAdmin())
+        && (request.resource.data.approvalStatus == 'pending' || isAdmin());
+      // Students cannot modify role or approvalStatus
+      allow update: if (isOwner(userId)
         && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.approvalStatus == resource.data.approvalStatus
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'displayName', 'name', 'photoURL', 'department', 'academicYear',
           'year_of_study', 'bio', 'creativeInterests', 'creativeSkills',
           'experienceLevel', 'portfolioLinks', 'profileVisibility', 'settings',
           'avatar_data', 'updatedAt'
-        ]);
+        ])) || isAdmin();
       allow delete: if isAdmin();
     }
 
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /adminActivityLogs/{logId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() || isAdmin();
+      allow update: if signedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /talentPosts/{postId} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if signedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+
     match /collaborationProjects/{projectId} {
-      allow read: if signedIn() && (resource.data.status == 'open' || resource.data.ownerId == request.auth.uid);
+      allow read: if signedIn() && (resource.data.status == 'open' || resource.data.ownerId == request.auth.uid || isAdmin());
       allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow update, delete: if signedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
     }
 
     match /collaborationRequests/{requestId} {
       allow create: if signedIn() && request.resource.data.requesterId == request.auth.uid;
       allow read: if signedIn() && (
         resource.data.requesterId == request.auth.uid ||
-        get(/databases/$(database)/documents/collaborationProjects/$(resource.data.projectId)).data.ownerId == request.auth.uid
+        get(/databases/$(database)/documents/collaborationProjects/$(resource.data.projectId)).data.ownerId == request.auth.uid ||
+        isAdmin()
       );
-      allow update: if signedIn() && get(/databases/$(database)/documents/collaborationProjects/$(resource.data.projectId)).data.ownerId == request.auth.uid;
-      allow delete: if signedIn() && resource.data.requesterId == request.auth.uid;
+      allow update: if signedIn() && (get(/databases/$(database)/documents/collaborationProjects/$(resource.data.projectId)).data.ownerId == request.auth.uid || isAdmin());
+      allow delete: if signedIn() && (resource.data.requesterId == request.auth.uid || isAdmin());
     }
 
     match /events/{eventId} {
-      allow read: if signedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /eventRegistrations/{registrationId} {
-      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow update, delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     match /{document=**} {
