@@ -6,7 +6,7 @@ export const NAV_ITEMS = [
   { id: 'talent-feed', label: 'Talent Feed', icon: 'images' },
   { id: 'achievements', label: 'Achievements', icon: 'badge' },
   { id: 'passport', label: 'Creative Passport', icon: 'compass' },
-  { id: 'discover-app', label: 'Opportunities', icon: 'badge' },
+  { id: 'discover-app', label: 'Opportunities', icon: 'search' },
   { id: 'collaborate', label: 'Collaborate', icon: 'users' },
   { id: 'events-app', label: 'Events', icon: 'calendar' },
   { id: 'portfolio', label: 'My Portfolio', icon: 'portfolio' }
@@ -76,6 +76,9 @@ export function AppShell({ active, onNavigate, onSignOut, currentUser, children 
         </div>
       </aside>
 
+      {/* Mobile Drawer Backdrop */}
+      {open && <div className="sidebar-backdrop" onClick={() => setOpen(false)} aria-hidden="true" />}
+
       {/* Main Content Area */}
       <div className="app-main">
         <header className="app-header">
@@ -97,7 +100,19 @@ export function AppShell({ active, onNavigate, onSignOut, currentUser, children 
           </div>
 
           <div className="header-right">
-            <div className="user-profile-pill" onClick={() => onNavigate('profile')}>
+            <div
+              className="user-profile-pill"
+              onClick={() => onNavigate('profile')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onNavigate('profile');
+                }
+              }}
+              aria-label="User profile and settings"
+            >
               <div className="avatar-circle">
                 {currentUser?.avatar_data ? (
                   <img src={currentUser.avatar_data} alt="" className="avatar-img" />
@@ -106,14 +121,20 @@ export function AppShell({ active, onNavigate, onSignOut, currentUser, children 
                 )}
               </div>
               <div className="user-info">
-                <strong>{currentUser?.displayName || currentUser?.name || 'SVM Student'}</strong>
-                <span>{currentUser?.department || 'Student'}</span>
+                <span className="user-name">
+                  {currentUser?.displayName || currentUser?.name || 'SVM Student'}
+                </span>
+                <span className="user-role-badge">
+                  {currentUser?.role === 'admin'
+                    ? 'Admin'
+                    : (currentUser?.department || 'Student')}
+                </span>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="page-content">{children}</main>
+        <main className="page-content" key={active}>{children}</main>
       </div>
     </div>
   );
