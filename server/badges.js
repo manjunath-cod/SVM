@@ -111,8 +111,8 @@ export const SERVER_SVM_BADGES = [
     requirement: 'Showcase verified artwork or graphic design.',
     description: 'Brought visual imagination to life through brush, color, or digital canvas.',
     xp: 200,
-    check: (stats) => stats.categories.has('painting') || stats.categories.has('graphic_design'),
-    calcProgress: (stats) => (stats.categories.has('painting') || stats.categories.has('graphic_design') ? 100 : 0)
+    check: (stats) => stats.categories.has('painting') || stats.categories.has('graphic_design') || stats.categories.has('art'),
+    calcProgress: (stats) => (stats.categories.has('painting') || stats.categories.has('graphic_design') || stats.categories.has('art') ? 100 : 0)
   },
   {
     id: 'melody-maker',
@@ -160,18 +160,26 @@ export function getUserStats(profileId) {
   const oppRegs = db.prepare('SELECT count(*) as cnt FROM opportunity_registrations WHERE profile_id = ?').get(profileId);
   const collabPosts = db.prepare('SELECT count(*) as cnt FROM collaboration_posts WHERE profile_id = ?').get(profileId);
   const collabReqs = db.prepare('SELECT count(*) as cnt FROM collaboration_requests WHERE sender_id = ?').get(profileId);
+  
+  // Also count talent feed creations!
+  let talentPosts = [];
+  try {
+    talentPosts = db.prepare('SELECT id, category FROM talent_posts WHERE profile_id = ?').all(profileId);
+  } catch { /* if table not yet initialized */ }
 
   const categories = new Set();
   subs.forEach((s) => categories.add(s.category));
   passport.forEach((p) => categories.add(p.category));
+  talentPosts.forEach((tp) => categories.add(tp.category));
 
   const maxScore = evals.reduce((max, e) => Math.max(max, e.overall_score || 0), 0);
   const rsvpCount = rsvps?.cnt || 0;
   const oppRegCount = oppRegs?.cnt || 0;
   const collabCount = (collabPosts?.cnt || 0) + (collabReqs?.cnt || 0);
+  const totalSubmissions = subs.length + talentPosts.length;
 
   return {
-    submissionCount: subs.length,
+    submissionCount: totalSubmissions,
     passportCount: passport.length,
     distinctCategories: categories.size,
     categories,
@@ -180,7 +188,7 @@ export function getUserStats(profileId) {
     rsvpCount,
     oppRegCount,
     collabCount,
-    activityCount: subs.length + rsvpCount + oppRegCount + collabCount
+    activityCount: totalSubmissions + rsvpCount + oppRegCount + collabCount
   };
 }
 
@@ -221,13 +229,12 @@ export function syncUserAchievements(profileId) {
           .run(profileId, b.id);
       }
     } else {
-      // Not yet earned - if record exists without unlock date, update progress
+      // Not yet earned - update progress
       if (!existingMap.has(b.id)) {
-        // Optionally track progress
+        // Progress tracked dynamically
       }
     }
   }
 
   return newlyUnlocked;
 }
-

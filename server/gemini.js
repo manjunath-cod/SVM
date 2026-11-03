@@ -324,7 +324,7 @@ INSTRUCTIONS:
 
   // Call Google Gemini API
   // We try gemini-2.5-flash first, and fall back to gemini-1.5-flash if needed
-  const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+  const models = ['gemini-3.5-flash', 'gemini-flash-lite-latest', 'gemini-3.8-flash', 'gemini-flash-latest'];
   let lastError = null;
 
   for (const modelName of models) {
