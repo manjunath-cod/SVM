@@ -38,6 +38,7 @@ export function LandingPage({ onExplore }) {
             <a href="#opportunities" onClick={() => setMenuOpen(false)}>Opportunities</a>
             <a href="#showcase" onClick={() => setMenuOpen(false)}>Showcase</a>
             <a href="#about" onClick={() => setMenuOpen(false)}>About SVM</a>
+            <a href="#admin/login" onClick={() => setMenuOpen(false)}>Admin Portal</a>
             <div className="mobile-nav-action">
               <button
                 className="button button-dark"
@@ -51,6 +52,7 @@ export function LandingPage({ onExplore }) {
             </div>
           </nav>
           <div className="header-actions">
+            <a className="sign-in admin-header-link" href="#admin/login">Admin Portal</a>
             <a className="sign-in" href="#signin">Student Portal</a>
             <button className="button button-dark header-cta" onClick={() => setJoinOpen(true)}>
               Join SVM <Icon name="arrow" size={16} />
@@ -151,7 +153,7 @@ export function LandingPage({ onExplore }) {
               <br />
               <em>than one major.</em>
             </h2>
-            <p>CultureLoop makes it easy to try something new, share what you love, and build confidence along the way.</p>
+            <p>SVM makes it easy to try something new, share what you love, and build confidence along the way.</p>
           </div>
 
           <div className="interest-panel">
@@ -327,13 +329,13 @@ export function LandingPage({ onExplore }) {
             <a href="#discover">Discover</a>
             <a href="#opportunities">Opportunities</a>
             <a href="#showcase">Showcase</a>
-            <a href="#admin/login">Staff Portal</a>
+            <a href="#admin/login">Admin Portal</a>
           </div>
           <div className="footer-social">
             <a href="#instagram" aria-label="Instagram">
               <Icon name="instagram" />
             </a>
-            <span>© 2026 SVM CultureLoop</span>
+            <span>© 2026 SVM — Sangeeta Vrinda Madhyam</span>
           </div>
         </div>
       </footer>
@@ -345,7 +347,7 @@ export function LandingPage({ onExplore }) {
           setJoinOpen(false);
           setJoinSubmitted(false);
         }}
-        eyebrow="Join SVM ? Sangeeta Vrinda Madhyam"
+        eyebrow="Join SVM — Sangeeta Vrinda Madhyam"
         title={joinSubmitted ? "You're on the list." : "Find your place in the creative community."}
       >
         {joinSubmitted ? (

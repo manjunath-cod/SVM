@@ -178,7 +178,7 @@ export function Profile({ onSignOut, currentUser, onUserUpdated }) {
               className="button button-dark full-width"
               onClick={onSignOut}
             >
-              <Icon name="arrowLeft" size={16} /> Sign out of CultureLoop
+              <Icon name="arrowLeft" size={16} /> Sign out of SVM
             </button>
           </section>
         </div>

@@ -77,31 +77,38 @@ export function Icon({ name, size = 18, className = '' }) {
   );
 }
 
-export function Logo({ href = '#top', showTagline = true }) {
+export function Logo({ href = '#top', showTagline = true, className = '' }) {
   return (
-    <a className="logo svm-brand-logo" href={href} aria-label="SVM ? Sangeeta Vrinda Madhyam">
-      <span className="svm-logo-badge">
-        <span className="svm-monogram">SVM</span>
-      </span>
+    <a className={`logo svm-brand-logo ${className}`} href={href} aria-label="SVM — Sangeeta Vrinda Madhyam">
+      <img
+        src="/assets/svm-logo.png"
+        alt="SVM"
+        className="svm-logo-img"
+        width="40"
+        height="40"
+      />
       <div className="logo-text-group">
         <span className="logo-title">SVM</span>
-        {showTagline && <span className="logo-tagline">Sangeeta Vrinda Madhyam</span>}
+        {showTagline && <span className="logo-tagline">SANGEETA VRINDA MADHYAM</span>}
       </div>
     </a>
   );
 }
 
-export function AdminLogo({ href = '#admin' }) {
+export function AdminLogo({ href = '#admin', className = '' }) {
   return (
-    <a className="logo svm-brand-logo admin-brand" href={href} aria-label="SVM Administration Portal">
-      <span className="svm-logo-badge admin">
-        <span className="svm-monogram">SVM</span>
-      </span>
+    <a className={`logo svm-brand-logo admin-brand ${className}`} href={href} aria-label="SVM Administration Portal">
+      <img
+        src="/assets/svm-logo.png"
+        alt="SVM Admin"
+        className="svm-logo-img admin"
+        width="40"
+        height="40"
+      />
       <div className="logo-text-group">
         <span className="logo-title">SVM Admin</span>
-        <span className="logo-tagline">Faculty & Coordinator Portal</span>
+        <span className="logo-tagline">SANGEETA VRINDA MADHYAM</span>
       </div>
     </a>
   );
 }
-
