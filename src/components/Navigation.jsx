@@ -26,7 +26,7 @@ export function AppShell({ active, onNavigate, onSignOut, currentUser, children 
       <aside className={open ? 'app-sidebar is-open' : 'app-sidebar'}>
         <div className="sidebar-brand">
           <Logo href="#dashboard" />
-          <span className="sidebar-subtitle">SVM CREATIVE SPACE</span>
+          <span className="sidebar-subtitle">SVM · SANGEETA VRINDA MADHYAM</span>
         </div>
 
         <nav aria-label="Student main navigation" className="sidebar-nav">
@@ -46,6 +46,19 @@ export function AppShell({ active, onNavigate, onSignOut, currentUser, children 
         </nav>
 
         <div className="sidebar-bottom">
+          {currentUser?.role === 'admin' && (
+            <button
+              className="side-link admin-shortcut-link"
+              onClick={() => {
+                window.location.hash = 'admin';
+                setOpen(false);
+              }}
+            >
+              <Icon name="shield" size={17} />
+              <span>Admin Portal</span>
+            </button>
+          )}
+
           <button
             className={active === 'profile' ? 'side-link active' : 'side-link'}
             onClick={() => {
@@ -75,36 +88,32 @@ export function AppShell({ active, onNavigate, onSignOut, currentUser, children 
               <Icon name={open ? 'close' : 'menu'} size={20} />
             </button>
             <div className="breadcrumb">
-              <span>SVM CultureLoop</span>
+              <span>SVM</span>
               <span className="breadcrumb-slash">/</span>
               <span className="breadcrumb-current">
-                {NAV_ITEMS.find((item) => item.id === active)?.label || 'Profile'}
+                {NAV_ITEMS.find((i) => i.id === active)?.label || 'Overview'}
               </span>
             </div>
           </div>
 
-          <div className="app-header-actions">
-            <button
-              className="action-button-pill"
-              onClick={() => onNavigate('talent-feed')}
-              title="Share your creative work"
-            >
-              <Icon name="plus" size={15} />
-              <span>Share your talent</span>
-            </button>
-
-            <button
-              className="profile-pill"
-              onClick={() => onNavigate('profile')}
-              aria-label="View profile"
-            >
-              <span className="profile-avatar">{getInitials(currentUser?.name)}</span>
-              <span className="profile-name">{currentUser?.name || 'Aarav Sharma'}</span>
-            </button>
+          <div className="header-right">
+            <div className="user-profile-pill" onClick={() => onNavigate('profile')}>
+              <div className="avatar-circle">
+                {currentUser?.avatar_data ? (
+                  <img src={currentUser.avatar_data} alt="" className="avatar-img" />
+                ) : (
+                  <span>{getInitials(currentUser?.displayName || currentUser?.name)}</span>
+                )}
+              </div>
+              <div className="user-info">
+                <strong>{currentUser?.displayName || currentUser?.name || 'SVM Student'}</strong>
+                <span>{currentUser?.department || 'Student'}</span>
+              </div>
+            </div>
           </div>
         </header>
 
-        <main className="app-content">{children}</main>
+        <main className="page-content">{children}</main>
       </div>
     </div>
   );
@@ -112,13 +121,13 @@ export function AppShell({ active, onNavigate, onSignOut, currentUser, children 
 
 export function PageHeader({ eyebrow, title, copy, action }) {
   return (
-    <div className="page-header">
-      <div>
+    <div className="page-header-row">
+      <div className="header-copy">
         {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-        <h1>{title}</h1>
-        {copy && <p className="page-copy">{copy}</p>}
+        {title && <h1>{title}</h1>}
+        {copy && <p className="lead">{copy}</p>}
       </div>
-      {action && <div className="page-header-action">{action}</div>}
+      {action && <div className="header-action-slot">{action}</div>}
     </div>
   );
 }

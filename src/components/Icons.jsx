@@ -77,11 +77,30 @@ export function Icon({ name, size = 18, className = '' }) {
   );
 }
 
-export function Logo({ href = '#top' }) {
+export function Logo({ href = '#top', showTagline = true }) {
   return (
-    <a className="logo" href={href} aria-label="SVM CultureLoop home">
-      <span className="logo-mark">C</span>
-      <span>CultureLoop</span>
+    <a className="logo svm-brand-logo" href={href} aria-label="SVM ? Sangeeta Vrinda Madhyam">
+      <span className="svm-logo-badge">
+        <span className="svm-monogram">SVM</span>
+      </span>
+      <div className="logo-text-group">
+        <span className="logo-title">SVM</span>
+        {showTagline && <span className="logo-tagline">Sangeeta Vrinda Madhyam</span>}
+      </div>
+    </a>
+  );
+}
+
+export function AdminLogo({ href = '#admin' }) {
+  return (
+    <a className="logo svm-brand-logo admin-brand" href={href} aria-label="SVM Administration Portal">
+      <span className="svm-logo-badge admin">
+        <span className="svm-monogram">SVM</span>
+      </span>
+      <div className="logo-text-group">
+        <span className="logo-title">SVM Admin</span>
+        <span className="logo-tagline">Faculty & Coordinator Portal</span>
+      </div>
     </a>
   );
 }

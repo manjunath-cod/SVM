@@ -43,7 +43,7 @@ export function Discover({ onNavigate }) {
         type: res.registered ? 'success' : 'info',
         title: res.registered ? 'Registered!' : 'Cancelled',
         message: res.registered
-          ? `You are now registered for "${title}". Details saved to your Creative Passport.`
+          ? `You are now registered for "${title}".`
           : `Registration for "${title}" has been cancelled.`
       });
       loadOpportunities();

@@ -4,7 +4,6 @@ import './styles.css';
 
 import { AppShell } from './components/Navigation.jsx';
 import { LandingPage } from './pages/LandingPage.jsx';
-import { SignIn } from './pages/SignIn.jsx';
 import { Dashboard } from './pages/Dashboard.jsx';
 import { TalentFeed } from './pages/TalentFeed.jsx';
 import { Achievements } from './pages/Achievements.jsx';
@@ -14,12 +13,27 @@ import { Collaborate } from './pages/Collaborate.jsx';
 import { Events } from './pages/Events.jsx';
 import { Portfolio } from './pages/Portfolio.jsx';
 import { Settings } from './pages/Settings.jsx';
-import { api } from './services/api.js';
+import { SignIn } from './pages/SignIn.jsx';
+import { SignUp } from './pages/SignUp.jsx';
+import { PendingApproval } from './pages/PendingApproval.jsx';
+import { AdminLogin } from './pages/AdminLogin.jsx';
+import { AdminDashboard } from './pages/AdminDashboard.jsx';
+
+import { subscribeToAuth, signOut } from './services/auth.js';
+import { getUserProfile } from './services/firestore.js';
+import { firebaseConfigured } from './services/firebase.js';
 
 function App() {
   const [route, setRoute] = useState(() => window.location.hash.replace('#', '') || 'landing');
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loadingSession, setLoadingSession] = useState(true);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cultureloop-user') || localStorage.getItem('svm_active_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [authLoading, setAuthLoading] = useState(firebaseConfigured);
 
   // Sync route on hashchange
   useEffect(() => {
@@ -31,16 +45,69 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Check existing session
+  // Listen to Firebase Auth state
   useEffect(() => {
-    checkSession();
+    if (!firebaseConfigured) {
+      setAuthLoading(false);
+      return undefined;
+    }
+
+    return subscribeToAuth(async (user) => {
+      if (!user) {
+        // Fallback to local session if present
+        const localSaved = localStorage.getItem('cultureloop-user') || localStorage.getItem('svm_active_session');
+        if (localSaved) {
+          try {
+            setCurrentUser(JSON.parse(localSaved));
+          } catch {
+            setCurrentUser(null);
+          }
+        } else {
+          setCurrentUser(null);
+        }
+        setAuthLoading(false);
+        return;
+      }
+
+      try {
+        const profile = await getUserProfile(user.uid);
+        const resolved = profile || {
+          id: user.uid,
+          uid: user.uid,
+          name: user.displayName || 'SVM Student',
+          displayName: user.displayName || 'SVM Student',
+          email: user.email || '',
+          role: 'student',
+          approvalStatus: 'approved'
+        };
+        setCurrentUser(resolved);
+        try {
+          localStorage.setItem('cultureloop-user', JSON.stringify(resolved));
+          localStorage.setItem('svm_active_session', JSON.stringify(resolved));
+          localStorage.setItem('cultureloop-user-email', resolved.email || '');
+        } catch { /* ignore */ }
+      } catch {
+        const fallback = {
+          id: user.uid,
+          uid: user.uid,
+          name: user.displayName || 'SVM Student',
+          email: user.email || '',
+          role: 'student',
+          approvalStatus: 'approved'
+        };
+        setCurrentUser(fallback);
+      }
+      setAuthLoading(false);
+    });
   }, []);
 
+  // Theme support
   useEffect(() => {
     const preference = localStorage.getItem('cultureloop-theme') || 'light';
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {
-      document.documentElement.dataset.theme = preference === 'dark' || (preference === 'system' && media.matches) ? 'dark' : 'light';
+      document.documentElement.dataset.theme =
+        preference === 'dark' || (preference === 'system' && media.matches) ? 'dark' : 'light';
     };
     apply();
     if (preference === 'system') {
@@ -49,46 +116,46 @@ function App() {
     }
   }, []);
 
-  const checkSession = async () => {
-    const savedEmail = localStorage.getItem('cultureloop-user-email');
-    if (savedEmail) {
+  const handleSignOut = async () => {
+    await signOut();
+    try {
+      localStorage.removeItem('cultureloop-user');
+      localStorage.removeItem('svm_active_session');
+      localStorage.removeItem('cultureloop-user-email');
+      localStorage.removeItem('cultureloop-session');
+    } catch { /* ignore */ }
+    setCurrentUser(null);
+    window.location.hash = 'landing';
+  };
+
+  const handleUserSignedIn = (user) => {
+    if (user) {
+      setCurrentUser(user);
       try {
-        const session = await api.getSession();
-        if (session?.user) {
-          setCurrentUser(session.user);
-        }
-      } catch (err) {
-        console.warn('Session check warning:', err.message);
+        localStorage.setItem('cultureloop-user', JSON.stringify(user));
+        localStorage.setItem('svm_active_session', JSON.stringify(user));
+        localStorage.setItem('cultureloop-user-email', user.email || '');
+        localStorage.setItem('cultureloop-session', 'active');
+      } catch { /* ignore */ }
+
+      // Role and approval routing
+      if (user.role === 'admin') {
+        window.location.hash = 'admin';
+        return;
+      }
+      if (user.approvalStatus === 'pending') {
+        window.location.hash = 'pending-approval';
+        return;
       }
     }
-    setLoadingSession(false);
-  };
-
-  const handleSignIn = async (email, onError) => {
-    try {
-      const res = await api.signIn(email);
-      localStorage.setItem('cultureloop-user-email', email);
-      localStorage.setItem('cultureloop-session', 'active');
-      setCurrentUser(res.user);
-      window.location.hash = 'dashboard';
-    } catch (err) {
-      onError?.('We could not connect to the CultureLoop session. Restart the dev server and try again.');
-      throw err;
-    }
-  };
-
-  const handleSignOut = () => {
-    localStorage.removeItem('cultureloop-user-email');
-    localStorage.removeItem('cultureloop-session');
-    setCurrentUser(null);
-    window.location.hash = 'top';
+    window.location.hash = 'dashboard';
   };
 
   const navigateTo = (pageId) => {
     window.location.hash = pageId;
   };
 
-  // Determine active authenticated view
+  // Protected student routes
   const authenticatedRoutes = [
     'dashboard',
     'talent-feed',
@@ -102,24 +169,65 @@ function App() {
     'settings'
   ];
 
-  const isAuthenticated = Boolean(currentUser);
-
-  if (loadingSession) {
+  if (authLoading) {
     return (
-      <div className="app-loading-screen">
-        <div className="logo-mark">C</div>
-        <span>Loading SVM CultureLoop...</span>
+      <div className="loading-state">
+        <p>Restoring your SVM session...</p>
       </div>
     );
   }
 
-  // If user navigated to signin and is not signed in
-  if (route === 'signin' && !isAuthenticated) {
-    return <SignIn onSignIn={handleSignIn} />;
+  // Route 1: Student Registration
+  if (route === 'signup') {
+    return <SignUp onRegistered={handleUserSignedIn} />;
   }
 
-  // If user is signed in and visits an app route (or signin while already signed in)
-  if (isAuthenticated && (authenticatedRoutes.includes(route) || route === 'signin')) {
+  // Route 2: Student Sign In
+  if (route === 'signin') {
+    return <SignIn onSignedIn={handleUserSignedIn} />;
+  }
+
+  // Route 3: Pending Approval Screen
+  if (route === 'pending-approval') {
+    return (
+      <PendingApproval
+        currentUser={currentUser}
+        onApproved={handleUserSignedIn}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  // Route 4: Administrator Login
+  if (route === 'admin/login') {
+    return <AdminLogin onAdminSignedIn={handleUserSignedIn} />;
+  }
+
+  // Route 5: Administrator Dashboard
+  if (route === 'admin') {
+    if (currentUser?.role === 'admin') {
+      return <AdminDashboard currentUser={currentUser} onSignOut={handleSignOut} />;
+    }
+    // If not signed in as admin, show admin login
+    return <AdminLogin onAdminSignedIn={handleUserSignedIn} />;
+  }
+
+  // Guard: If accessing student protected routes
+  if (authenticatedRoutes.includes(route)) {
+    if (!currentUser) {
+      return <SignIn onSignedIn={handleUserSignedIn} />;
+    }
+
+    if (currentUser.approvalStatus === 'pending') {
+      return (
+        <PendingApproval
+          currentUser={currentUser}
+          onApproved={handleUserSignedIn}
+          onSignOut={handleSignOut}
+        />
+      );
+    }
+
     const activePage = authenticatedRoutes.includes(route) ? route : 'dashboard';
 
     const renderActivePage = () => {
@@ -146,7 +254,13 @@ function App() {
             <Settings
               onSignOut={handleSignOut}
               currentUser={currentUser}
-              onUserUpdated={(u) => setCurrentUser(u)}
+              onUserUpdated={(u) => {
+                setCurrentUser(u);
+                try {
+                  localStorage.setItem('cultureloop-user', JSON.stringify(u));
+                  localStorage.setItem('svm_active_session', JSON.stringify(u));
+                } catch { /* ignore */ }
+              }}
             />
           );
         default:
@@ -166,11 +280,10 @@ function App() {
     );
   }
 
-  // Public Landing Page
+  // Public Landing Page (default)
   return (
     <LandingPage
       onExplore={() => navigateTo('signin')}
-      onJoin={handleSignIn}
     />
   );
 }
