@@ -23,8 +23,34 @@ import { subscribeToAuth, signOut } from './services/auth.js';
 import { getUserProfile } from './services/firestore.js';
 import { firebaseConfigured } from './services/firebase.js';
 
+function getCleanRoute() {
+  const hash = window.location.hash || '';
+  const clean = hash.replace(/^#\/?/, '').trim();
+  if (!clean) return 'landing';
+  const [base] = clean.split(/[?#]/);
+  return base || 'landing';
+}
+
+const ROUTE_ALIASES = {
+  '': 'landing',
+  'home': 'landing',
+  'discover': 'discover-app',
+  'opportunities': 'discover-app',
+  'events': 'events-app',
+  'settings': 'profile',
+  'my-portfolio': 'portfolio',
+  'feed': 'talent-feed'
+};
+
+function normalizeRoute(raw) {
+  if (!raw) return 'landing';
+  if (raw.startsWith('talent-feed')) return 'talent-feed';
+  return ROUTE_ALIASES[raw] || raw;
+}
+
 function App() {
-  const [route, setRoute] = useState(() => window.location.hash.replace('#', '') || 'landing');
+  const [rawRoute, setRawRoute] = useState(() => getCleanRoute());
+  const route = normalizeRoute(rawRoute);
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('cultureloop-user') || localStorage.getItem('svm_active_session');
@@ -38,8 +64,7 @@ function App() {
   // Sync route on hashchange
   useEffect(() => {
     const handleHashChange = () => {
-      const nextRoute = window.location.hash.replace('#', '') || 'landing';
-      setRoute(nextRoute);
+      setRawRoute(getCleanRoute());
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
@@ -154,6 +179,7 @@ function App() {
 
   const navigateTo = (pageId) => {
     window.location.hash = pageId;
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   // Protected student routes
@@ -166,8 +192,7 @@ function App() {
     'collaborate',
     'events-app',
     'portfolio',
-    'profile',
-    'settings'
+    'profile'
   ];
 
   if (authLoading) {
@@ -250,7 +275,6 @@ function App() {
         case 'portfolio':
           return <Portfolio onNavigate={navigateTo} currentUser={currentUser} />;
         case 'profile':
-        case 'settings':
           return (
             <Settings
               onSignOut={handleSignOut}

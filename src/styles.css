@@ -4191,57 +4191,52 @@ fieldset legend {
   }
 }
 
-/* Approved SVM dashboard treatment */
+/* Official SVM Clean Workspace Treatment - No Background bleed */
 :root {
-  --glass-border: rgba(255, 255, 255, 0.72);
-  --glass-shadow: 0 16px 38px rgba(87, 52, 126, 0.12);
+  --glass-border: rgba(124, 58, 237, 0.12);
+  --glass-shadow: 0 4px 20px rgba(87, 52, 126, 0.05);
 }
 
 .app-shell {
   position: relative;
-  isolation: isolate;
-  background:
-    linear-gradient(110deg, rgba(255, 248, 244, 0.16), rgba(235, 220, 249, 0.2)),
-    url('/assets/svm-cultural-bg.jpg') center / cover fixed;
-}
-
-.app-shell::before {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  content: '';
-  background: linear-gradient(180deg, rgba(255, 249, 245, 0.05), rgba(255, 239, 249, 0.16));
-  pointer-events: none;
+  min-height: 100dvh;
+  display: flex;
+  background-color: #f9f8fc;
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(124, 58, 237, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 0% 100%, rgba(217, 180, 254, 0.06) 0%, transparent 45%);
 }
 
 .app-sidebar {
-  border-right-color: rgba(255, 255, 255, 0.58);
-  background: rgba(255, 251, 248, 0.42);
-  box-shadow: 10px 0 30px rgba(85, 49, 114, 0.06);
-  backdrop-filter: blur(14px) saturate(115%);
-  -webkit-backdrop-filter: blur(14px) saturate(115%);
+  border-right: 1px solid rgba(124, 58, 237, 0.12);
+  background: #ffffff;
+  box-shadow: 4px 0 24px rgba(85, 49, 114, 0.04);
 }
 
 .app-header {
-  border-bottom-color: rgba(255, 255, 255, 0.58);
-  background: rgba(255, 251, 248, 0.28);
-  backdrop-filter: blur(14px) saturate(115%);
-  -webkit-backdrop-filter: blur(14px) saturate(115%);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.12);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
+/* Solid Opaque Backgrounds for All Page Cards - Prevents Any Background Overlap */
 .app-panel,
 .opportunity-card,
 .settings-card,
-.settings-hero {
-  border-color: rgba(255, 255, 255, 0.82);
-  background: rgba(255, 253, 250, 0.93);
-  box-shadow: var(--glass-shadow);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+.settings-hero,
+.talent-create-card,
+.talent-post-card,
+.talent-side-card,
+.talent-side-card.popular-card {
+  border: 1px solid rgba(124, 58, 237, 0.12);
+  background: #ffffff !important;
+  box-shadow: 0 4px 20px rgba(87, 52, 126, 0.05);
 }
 
 .journey-card {
-  background: rgba(247, 239, 255, 0.94);
+  background: #f7f3fd !important;
+  border: 1px solid rgba(124, 58, 237, 0.15);
 }
 
 .match-note {
@@ -4249,13 +4244,11 @@ fieldset legend {
 }
 
 .welcome-panel {
-  border-color: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background:
-    radial-gradient(circle at 82% 18%, rgba(117, 69, 214, 0.4), transparent 34%),
-    linear-gradient(112deg, #090711 0%, #171226 46%, #7545d6 100%);
-  box-shadow: 0 20px 46px rgba(32, 19, 61, 0.26);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+    radial-gradient(circle at 82% 18%, rgba(124, 58, 237, 0.45), transparent 34%),
+    linear-gradient(112deg, #090711 0%, #171226 46%, #6b21a8 100%);
+  box-shadow: 0 16px 36px rgba(32, 19, 61, 0.22);
 }
 
 .welcome-panel .eyebrow {
@@ -4284,51 +4277,62 @@ fieldset legend {
 }
 
 .side-link:hover {
-  background: rgba(255, 255, 255, 0.48);
+  background: #f5f2fd;
+  color: var(--purple, #7c3aed);
 }
 
 .side-link.active {
-  background: rgba(238, 224, 255, 0.82);
-  box-shadow: inset 3px 0 0 var(--purple);
+  background: #ede8fc;
+  color: var(--purple, #7c3aed);
+  box-shadow: inset 3px 0 0 var(--purple, #7c3aed);
 }
 
 .action-button-pill,
 .profile-pill,
 .tab-pill-group {
-  border-color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 253, 250, 0.66);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  border-color: rgba(124, 58, 237, 0.18);
+  background: #ffffff;
 }
 
 @media (max-width: 950px) {
   .app-sidebar {
-    background: rgba(255, 251, 248, 0.9);
+    background: #ffffff;
   }
 }
 
 :root[data-theme='dark'] .app-shell {
-  background:
-    linear-gradient(110deg, rgba(9, 7, 17, 0.8), rgba(36, 21, 54, 0.72)),
-    url('/assets/svm-cultural-bg.jpg') center / cover fixed;
+  background-color: #0e0a18;
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 0% 100%, rgba(76, 29, 149, 0.15) 0%, transparent 45%);
 }
 
-:root[data-theme='dark'] .app-sidebar,
+:root[data-theme='dark'] .app-sidebar {
+  background: #130e20;
+  border-right-color: rgba(190, 160, 235, 0.15);
+}
+
 :root[data-theme='dark'] .app-header {
-  background: rgba(18, 13, 30, 0.78);
-  border-color: rgba(190, 160, 235, 0.2);
+  background: rgba(19, 14, 32, 0.96);
+  border-bottom-color: rgba(190, 160, 235, 0.15);
 }
 
 :root[data-theme='dark'] .app-panel,
 :root[data-theme='dark'] .opportunity-card,
 :root[data-theme='dark'] .settings-card,
-:root[data-theme='dark'] .settings-hero {
-  border-color: rgba(190, 160, 235, 0.22);
-  background: rgba(24, 16, 39, 0.94);
+:root[data-theme='dark'] .settings-hero,
+:root[data-theme='dark'] .talent-create-card,
+:root[data-theme='dark'] .talent-post-card,
+:root[data-theme='dark'] .talent-side-card,
+:root[data-theme='dark'] .talent-side-card.popular-card {
+  border-color: rgba(190, 160, 235, 0.18);
+  background: #171226 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 :root[data-theme='dark'] .journey-card {
-  background: rgba(45, 28, 67, 0.94) !important;
+  background: #251b3d !important;
+  border-color: rgba(190, 160, 235, 0.22) !important;
 }
 
 
@@ -6011,4 +6015,107 @@ fieldset legend {
 .admin-header-link:hover {
   background: rgba(124, 58, 237, 0.08) !important;
   border-color: #7c3aed !important;
+}
+
+/* ==========================================================================
+   SVM HEADER IDENTITY, MOBILE BACKDROP & PAGE CONTENT FLOW
+   ========================================================================== */
+
+/* User Identity Pill in Header */
+.user-profile-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 14px 5px 5px;
+  background: #ffffff;
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.05);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.user-profile-pill:hover {
+  border-color: #7c3aed;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.12);
+  transform: translateY(-1px);
+}
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.avatar-circle img,
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 1.2;
+  text-align: left;
+}
+.user-info .user-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink, #19182e);
+  white-space: nowrap;
+}
+.user-info .user-role-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #7c3aed;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+:root[data-theme='dark'] .user-profile-pill {
+  background: #171226;
+  border-color: rgba(190, 160, 235, 0.22);
+}
+:root[data-theme='dark'] .user-info .user-name {
+  color: #f5f3ff;
+}
+:root[data-theme='dark'] .user-info .user-role-badge {
+  color: #c4b5fd;
+}
+
+/* Sidebar Backdrop on Mobile */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 10, 30, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 25;
+}
+
+/* Standardized Main Content Flow Across All Routes */
+.page-content {
+  width: min(1200px, calc(100% - 64px));
+  margin: 0 auto;
+  padding: 36px 0 80px;
+  min-height: calc(100dvh - 74px);
+  position: relative;
+  box-sizing: border-box;
+}
+
+@media (max-width: 950px) {
+  .page-content {
+    width: calc(100% - 32px);
+    padding: 24px 0 60px;
+  }
 }
