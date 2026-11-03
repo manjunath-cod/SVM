@@ -1,6 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ====================================================
+    // AUTHENTICATION & ROLE IDENTIFICATION HELPERS
+    // ====================================================
+
     function signedIn() {
       return request.auth != null;
     }
@@ -9,86 +14,290 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
+    function userDoc(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function hasUserDoc(uid) {
+      return signedIn() && exists(userDoc(uid));
+    }
+
+    function getUserData(uid) {
+      return get(userDoc(uid)).data;
+    }
+
+    // Strict Admin check: Verified against Firestore /users/{uid} document or custom token
     function isAdmin() {
       return signedIn() && (
         request.auth.token.admin == true ||
-        request.auth.token.email in ['admin@svm.kle.edu', 'cultural-head@svm.kle.edu'] ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+        (hasUserDoc(request.auth.uid) && getUserData(request.auth.uid).role == 'admin')
       );
     }
 
+    // Approved student check: Exists in /users and approvalStatus is exactly 'approved'
+    function isApprovedStudent() {
+      return signedIn() &&
+        hasUserDoc(request.auth.uid) &&
+        getUserData(request.auth.uid).approvalStatus == 'approved';
+    }
+
+    function isApprovedOrAdmin() {
+      return isAdmin() || isApprovedStudent();
+    }
+
+    // ====================================================
+    // 1. USERS COLLECTION (Student & Admin Profiles)
+    // ====================================================
     match /users/{userId} {
-      allow read: if signedIn() && (isOwner(userId) || isAdmin() || resource.data.profileVisibility == 'campus');
-      // Students can only register themselves as role 'student' and approvalStatus 'pending'
-      allow create: if isOwner(userId) && request.resource.data.uid == request.auth.uid
-        && (request.resource.data.role == 'student' || isAdmin())
-        && (request.resource.data.approvalStatus == 'pending' || isAdmin());
-      // Students cannot modify role or approvalStatus
-      allow update: if (isOwner(userId)
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.approvalStatus == resource.data.approvalStatus
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+      // READ:
+      // - Users can always read their own profile (needed for login & pending-approval screen)
+      // - Admins can read all profiles (needed for pending approval review & audit lists)
+      // - Approved students can only view other APPROVED students who set profileVisibility == 'campus'
+      // - Pending students cannot browse other student profiles
+      allow read: if signedIn() && (
+        isOwner(userId) ||
+        isAdmin() ||
+        (isApprovedStudent() && resource.data.approvalStatus == 'approved' && resource.data.profileVisibility == 'campus')
+      );
+
+      // CREATE (Registration):
+      // - Document ID must match authenticated UID
+      // - Non-admin students are strictly forced to role 'student' and approvalStatus 'pending'
+      // - Admins can create pre-approved or faculty accounts
+      allow create: if isOwner(userId) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.email is string &&
+        request.resource.data.name is string && request.resource.data.name.size() >= 2 &&
+        (
+          isAdmin() ||
+          (
+            request.resource.data.role == 'student' &&
+            request.resource.data.approvalStatus == 'pending'
+          )
+        );
+
+      // UPDATE:
+      // Case A: Administrator reviewing a student
+      // - Admin can update approval status ('pending', 'approved', 'rejected') and review notes
+      // - Admin CANNOT alter the user's uid or email (prevents identity spoofing)
+      // Case B: Student updating their own profile
+      // - Student CANNOT change role (must match existing role)
+      // - Student CANNOT change approvalStatus (must match existing status)
+      // - Student CANNOT change uid or email
+      // - Only permitted non-privileged profile fields can be modified
+      allow update: if (
+        isAdmin() &&
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.email == resource.data.email &&
+        request.resource.data.approvalStatus in ['pending', 'approved', 'rejected'] &&
+        request.resource.data.role in ['student', 'admin']
+      ) || (
+        isOwner(userId) &&
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.email == resource.data.email &&
+        request.resource.data.role == resource.data.role &&
+        request.resource.data.approvalStatus == resource.data.approvalStatus &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'displayName', 'name', 'photoURL', 'department', 'academicYear',
           'year_of_study', 'bio', 'creativeInterests', 'creativeSkills',
           'experienceLevel', 'portfolioLinks', 'profileVisibility', 'settings',
           'avatar_data', 'updatedAt'
-        ])) || isAdmin();
+        ])
+      );
+
+      // DELETE:
+      // Strictly restricted to admins only
       allow delete: if isAdmin();
     }
 
+    // ====================================================
+    // 2. ANNOUNCEMENTS (Notices & Official Bulletins)
+    // ====================================================
     match /announcements/{announcementId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      // READ:
+      // - Active (non-archived) announcements are public to all students, visitors, and connection probes
+      // - Archived announcements can ONLY be viewed by administrators
+      allow read: if isAdmin() || resource.data.archived != true;
+
+      // WRITE:
+      // Strictly Admin only. Enforces required fields and valid priorities.
+      allow create: if isAdmin() &&
+        request.resource.data.title is string && request.resource.data.title.size() >= 3 &&
+        request.resource.data.content is string && request.resource.data.content.size() >= 5 &&
+        request.resource.data.priority in ['normal', 'high', 'urgent'] &&
+        request.resource.data.archived is bool;
+
+      allow update: if isAdmin() &&
+        request.resource.data.title is string &&
+        request.resource.data.content is string &&
+        request.resource.data.archived is bool;
+
+      allow delete: if isAdmin();
     }
 
+    // ====================================================
+    // 3. ADMIN ACTIVITY LOGS (Immutable Audit Trail)
+    // ====================================================
     match /adminActivityLogs/{logId} {
-      allow read, create: if isAdmin();
+      // Only administrators can read activity logs
+      allow read: if isAdmin();
+
+      // Admins can log actions, and students can log initial registration event
+      allow create: if signedIn() && (
+        isAdmin() ||
+        (
+          request.resource.data.action == 'STUDENT_REGISTERED' &&
+          request.resource.data.targetUid == request.auth.uid
+        )
+      );
+
+      // Logs are strictly immutable: no editing or deletion permitted by anyone
       allow update, delete: if false;
     }
 
+    // ====================================================
+    // 4. NOTIFICATIONS (Student Inboxes)
+    // ====================================================
     match /notifications/{notificationId} {
-      allow read: if signedIn() && resource.data.userId == request.auth.uid;
-      allow create: if signedIn() || isAdmin();
-      allow update: if signedIn() && resource.data.userId == request.auth.uid;
-      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+      // Students read only their own notifications; Admins can view for administrative support
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+
+      // Admins or system can create notifications
+      allow create: if signedIn() && (isAdmin() || request.resource.data.userId == request.auth.uid);
+
+      // Students can only mark their own notifications as read
+      // Cannot alter target userId, title, or message content
+      allow update: if signedIn() &&
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt', 'updatedAt']);
+
+      allow delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
-    match /talentPosts/{postId} {
-      allow read: if true;
-      allow create: if signedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if signedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
-    }
-
+    // ====================================================
+    // 5. COLLABORATION PROJECTS (Student Creative Callouts)
+    // ====================================================
     match /collaborationProjects/{projectId} {
-      allow read: if signedIn() && (resource.data.status == 'open' || resource.data.ownerId == request.auth.uid || isAdmin());
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if signedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      // Only approved students and admins can view projects
+      // Pending students are blocked from creative collaborations
+      allow read: if isApprovedOrAdmin() && (
+        resource.data.status == 'open' ||
+        resource.data.ownerId == request.auth.uid ||
+        isAdmin()
+      );
+
+      // Only approved students can create callouts; ownerId must match caller UID
+      allow create: if isApprovedOrAdmin() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.title is string && request.resource.data.title.size() >= 3 &&
+        request.resource.data.description is string && request.resource.data.description.size() >= 5 &&
+        request.resource.data.status in ['open', 'closed'];
+
+      // Project owner or admin can update
+      // SECURITY: ownerId CANNOT be modified or transferred
+      allow update: if isApprovedOrAdmin() &&
+        (resource.data.ownerId == request.auth.uid || isAdmin()) &&
+        request.resource.data.ownerId == resource.data.ownerId &&
+        request.resource.data.title is string &&
+        request.resource.data.status in ['open', 'closed'];
+
+      // Project owner or admin can delete
+      allow delete: if isApprovedOrAdmin() && (
+        resource.data.ownerId == request.auth.uid ||
+        isAdmin()
+      );
     }
 
+    // ====================================================
+    // 6. COLLABORATION REQUESTS (Join Applications)
+    // ====================================================
     match /collaborationRequests/{requestId} {
-      allow create: if signedIn() && request.resource.data.requesterId == request.auth.uid;
-      allow read: if signedIn() && (
+      // Requester, Project Owner, or Admin can read
+      allow read: if isApprovedOrAdmin() && (
         resource.data.requesterId == request.auth.uid ||
         get(/databases/$(database)/documents/collaborationProjects/$(resource.data.projectId)).data.ownerId == request.auth.uid ||
         isAdmin()
       );
-      allow update: if signedIn() && (get(/databases/$(database)/documents/collaborationProjects/$(resource.data.projectId)).data.ownerId == request.auth.uid || isAdmin());
-      allow delete: if signedIn() && (resource.data.requesterId == request.auth.uid || isAdmin());
+
+      // Only approved students can submit join requests; requesterId must match caller UID
+      allow create: if isApprovedOrAdmin() &&
+        request.resource.data.requesterId == request.auth.uid &&
+        request.resource.data.projectId is string &&
+        request.resource.data.status == 'pending';
+
+      // Project owner can accept/decline; requester can edit their message
+      // SECURITY: requesterId and projectId CANNOT be modified or transferred
+      allow update: if isApprovedOrAdmin() && (
+        get(/databases/$(database)/documents/collaborationProjects/$(resource.data.projectId)).data.ownerId == request.auth.uid ||
+        resource.data.requesterId == request.auth.uid ||
+        isAdmin()
+      ) &&
+      request.resource.data.requesterId == resource.data.requesterId &&
+      request.resource.data.projectId == resource.data.projectId &&
+      request.resource.data.status in ['pending', 'accepted', 'declined'];
+
+      // Requester or Admin can withdraw/delete
+      allow delete: if isApprovedOrAdmin() && (
+        resource.data.requesterId == request.auth.uid ||
+        isAdmin()
+      );
     }
 
+    // ====================================================
+    // 7. EVENTS & REGISTRATIONS
+    // ====================================================
     match /events/{eventId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
     match /eventRegistrations/{registrationId} {
+      // Student reading their own registration or Admin
       allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+
+      // Only approved students can register for events; userId must match caller UID
+      allow create: if isApprovedOrAdmin() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.eventId is string;
+
+      // SECURITY: userId and eventId CANNOT be modified (prevents ticket/seat transfer)
+      allow update: if signedIn() &&
+        (resource.data.userId == request.auth.uid || isAdmin()) &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.eventId == resource.data.eventId;
+
+      allow delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
+    // ====================================================
+    // 8. TALENT FEED POSTS (Creative Showcase)
+    // ====================================================
+    match /talentPosts/{postId} {
+      // Authenticated users can view campus creative submissions
+      allow read: if signedIn();
+
+      // Only approved students can post creative work; authorId must match caller UID
+      allow create: if isApprovedOrAdmin() &&
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.title is string && request.resource.data.title.size() >= 2;
+
+      // Author or Admin can update
+      // SECURITY: authorId CANNOT be modified or transferred
+      allow update: if isApprovedOrAdmin() &&
+        (resource.data.authorId == request.auth.uid || isAdmin()) &&
+        request.resource.data.authorId == resource.data.authorId &&
+        request.resource.data.title is string;
+
+      allow delete: if isApprovedOrAdmin() && (
+        resource.data.authorId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // ====================================================
+    // 9. DEFAULT DENY
+    // ====================================================
     match /{document=**} {
       allow read, write: if false;
     }
