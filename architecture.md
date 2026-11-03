@@ -121,3 +121,19 @@ erDiagram
 3. **Standalone Production Server (`server.js`)**:
    - Command: `node server.js`
    - Verified: Serves static assets from `dist/` and handles `/api/*` endpoints with HTTP 200.
+
+## Firebase Integration Audit (2026-11-02)
+
+The current checkout uses a Vite + React frontend with a Firebase-backed cloud
+path and a localStorage compatibility path. Firebase initialization is
+centralized in `src/services/firebase.js`; authentication is implemented in
+`src/services/auth.js`; profile and collaboration data access is implemented in
+`src/services/firestore.js`. Firestore and Storage ownership rules are defined
+in `firestore.rules` and `storage.rules`, with SPA hosting rewrites in
+`firebase.json`.
+
+Cloud-backed areas currently wired: email/password registration and login,
+Google sign-in, password reset, persistent session restoration, user profile
+updates, collaboration project discovery/publication, and join requests.
+Talent feed, events, opportunities, portfolio, and achievements remain on the
+existing adapter until their collection-specific Firebase services are added.

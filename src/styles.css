@@ -4356,6 +4356,36 @@ fieldset legend {
   gap: 16px;
 }
 
+.journey-intelligence-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid rgba(117, 69, 214, .18);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(117, 69, 214, .1), rgba(255, 255, 255, .72));
+}
+.journey-intelligence-panel h2, .dynamic-achievements-section h2 { margin: 4px 0 8px; }
+.journey-intelligence-panel p { max-width: 700px; margin: 0; color: var(--muted); line-height: 1.6; }
+.journey-status { display: flex; align-items: center; gap: 8px; color: #26734d; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.dynamic-achievements-section { display: flex; flex-direction: column; gap: 16px; }
+.section-heading-row { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+.dynamic-achievements-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.dynamic-achievement-card { display: grid; grid-template-columns: 78px 1fr; gap: 16px; padding: 18px; border: 1px solid rgba(117, 69, 214, .16); border-radius: 16px; background: var(--surface, #fff); }
+.dynamic-achievement-art { width: 78px; height: 78px; object-fit: contain; }
+.dynamic-achievement-meta { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.dynamic-achievement-meta strong { color: #8a6413; }
+.dynamic-achievement-card h3 { margin: 7px 0 5px; }
+.dynamic-achievement-card p { margin: 0 0 8px; color: var(--muted); line-height: 1.5; font-size: 13px; }
+.dynamic-achievement-evidence { font-size: 12px !important; }
+.dynamic-achievement-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.dynamic-achievement-tags span { padding: 4px 8px; border-radius: 999px; background: rgba(117, 69, 214, .1); color: #6540b2; font-size: 11px; }
+@media (max-width: 700px) {
+  .journey-intelligence-panel, .section-heading-row { align-items: flex-start; flex-direction: column; }
+  .journey-status { white-space: normal; }
+}
+
 .ach-stat-card {
   background: var(--surface, #ffffff);
   border: 1px solid rgba(117, 69, 214, 0.12);
@@ -5103,4 +5133,28 @@ fieldset legend {
 :root[data-theme='dark'] .celebration-container h2,
 :root[data-theme='dark'] .ach-modal-details h3 {
   color: #ffffff;
+}
+
+/* Auth Mode Indicators */
+.auth-mode-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  margin-bottom: 1.25rem;
+  font-weight: 500;
+  width: 100%;
+  box-sizing: border-box;
+}
+.auth-mode-indicator.cloud {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+.auth-mode-indicator.local {
+  background: rgba(184, 115, 51, 0.12);
+  color: #9a5b28;
+  border: 1px solid rgba(184, 115, 51, 0.25);
 }

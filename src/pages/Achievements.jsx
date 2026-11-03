@@ -128,6 +128,7 @@ export function Achievements({ onNavigate, currentUser }) {
     verifiedMilestones: 2,
     certificatesEarned: 0
   };
+  const dynamicAchievements = achievementsData?.dynamicAchievements || [];
 
   return (
     <div className="achievements-page">
@@ -214,6 +215,52 @@ export function Achievements({ onNavigate, currentUser }) {
           </div>
         </div>
       </section>
+
+      <section className="journey-intelligence-panel">
+        <div>
+          <span className="eyebrow">Creative Journey Engine</span>
+          <h2>Recognition that follows your journey</h2>
+          <p>
+            SVM uses your submitted work and verified participation to discover personal milestones.
+            AI proposes recognition first; institution-approved review is required before a dynamic award is permanent.
+          </p>
+        </div>
+        <div className="journey-status">
+          <Icon name="shield" size={18} />
+          <span>Evidence-backed · No fabricated progress</span>
+        </div>
+      </section>
+
+      {dynamicAchievements.length > 0 && (
+        <section className="dynamic-achievements-section">
+          <div className="section-heading-row">
+            <div>
+              <span className="eyebrow">Personalized recognition</span>
+              <h2>Your journey proposals</h2>
+            </div>
+            <span className="muted small-note">Reviewed by SVM before awarding</span>
+          </div>
+          <div className="dynamic-achievements-grid">
+            {dynamicAchievements.map((achievement) => (
+              <article className="dynamic-achievement-card" key={achievement.id}>
+                <img src={achievement.image} alt="" className="dynamic-achievement-art" />
+                <div>
+                  <div className="dynamic-achievement-meta">
+                    <span>{achievement.category}</span>
+                    <strong>{achievement.status === 'approved' ? 'Awarded' : 'Pending review'}</strong>
+                  </div>
+                  <h3>{achievement.title}</h3>
+                  <p>{achievement.description}</p>
+                  <p className="dynamic-achievement-evidence"><strong>Why:</strong> {achievement.reasoning_summary}</p>
+                  <div className="dynamic-achievement-tags">
+                    {achievement.skills.map((skill) => <span key={skill}>{skill}</span>)}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Filter Tabs */}
       <div className="ach-filter-toolbar">

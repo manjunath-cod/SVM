@@ -4,6 +4,7 @@ import { api } from '../services/api.js';
 
 export function Dashboard({ onNavigate, currentUser }) {
   const [passport, setPassport] = useState(null);
+  const [userSubmissions, setUserSubmissions] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
   const [events, setEvents] = useState([]);
   const [achievements, setAchievements] = useState(null);
@@ -16,13 +17,15 @@ export function Dashboard({ onNavigate, currentUser }) {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [passData, oppData, evtData, achData] = await Promise.all([
+      const [passData, submissionData, oppData, evtData, achData] = await Promise.all([
         api.getPassport().catch(() => null),
+        api.getSubmissions().catch(() => ({ submissions: [] })),
         api.getOpportunities().catch(() => ({ opportunities: [] })),
         api.getEvents().catch(() => ({ events: [] })),
         api.getAchievements().catch(() => null)
       ]);
       setPassport(passData);
+      setUserSubmissions(submissionData?.submissions || []);
       setOpportunities(oppData?.opportunities || []);
       setEvents(evtData?.events || []);
       setAchievements(achData);
@@ -41,8 +44,7 @@ export function Dashboard({ onNavigate, currentUser }) {
   }).format(new Date());
 
   const completionPct = passport?.completionPercentage || 45;
-  const userInterests = passport?.interests?.map((i) => i.category) || ['photography', 'music', 'writing'];
-  const userSubmissions = passport?.submissions || [];
+  const userInterests = passport?.interests?.map((i) => i.category || i) || ['photography', 'music', 'writing'];
 
   return (
     <div className="dashboard-page">
@@ -91,7 +93,7 @@ export function Dashboard({ onNavigate, currentUser }) {
           </div>
 
           <div className="passport-tags">
-            {userInterests.map((interest) => (
+            {userInterests.slice(0, 4).map((interest) => (
               <span key={interest}>{interest}</span>
             ))}
           </div>

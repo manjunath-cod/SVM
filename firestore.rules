@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (isOwner(userId) || resource.data.profileVisibility == 'campus');
+      allow create: if isOwner(userId) && request.resource.data.uid == request.auth.uid;
+      allow update: if isOwner(userId)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName', 'name', 'photoURL', 'department', 'academicYear',
+          'year_of_study', 'bio', 'creativeInterests', 'creativeSkills',
+          'experienceLevel', 'portfolioLinks', 'profileVisibility', 'settings',
+          'avatar_data', 'updatedAt'
+        ]);
+      allow delete: if isAdmin();
+    }
+
+    match /collaborationProjects/{projectId} {
+      allow read: if signedIn() && (resource.data.status == 'open' || resource.data.ownerId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /collaborationRequests/{requestId} {
+      allow create: if signedIn() && request.resource.data.requesterId == request.auth.uid;
+      allow read: if signedIn() && (
+        resource.data.requesterId == request.auth.uid ||
+        get(/databases/$(database)/documents/collaborationProjects/$(resource.data.projectId)).data.ownerId == request.auth.uid
+      );
+      allow update: if signedIn() && get(/databases/$(database)/documents/collaborationProjects/$(resource.data.projectId)).data.ownerId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.requesterId == request.auth.uid;
+    }
+
+    match /events/{eventId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /eventRegistrations/{registrationId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

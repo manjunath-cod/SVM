@@ -51,7 +51,7 @@ export function LandingPage({ onExplore }) {
             </div>
           </nav>
           <div className="header-actions">
-            <a className="sign-in" href="#signin">Student Portal</a>
+            <a className="sign-in" href="#dashboard">Student Portal</a>
             <button className="button button-dark header-cta" onClick={() => setJoinOpen(true)}>
               Join SVM <Icon name="arrow" size={16} />
             </button>

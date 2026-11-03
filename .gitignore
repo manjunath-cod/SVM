@@ -26,3 +26,10 @@ model_capabilities.yaml
 scripts/validate-*
 scripts/search_repo.*
 scripts/setup_search.*
+
+# Firebase CLI cache & logs
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
