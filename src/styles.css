@@ -4228,7 +4228,10 @@ fieldset legend {
 .talent-create-card,
 .talent-post-card,
 .talent-side-card,
-.talent-side-card.popular-card {
+.talent-side-card.popular-card,
+.portfolio-card,
+.collab-card,
+.empty-state {
   border: 1px solid rgba(124, 58, 237, 0.12);
   background: #ffffff !important;
   box-shadow: 0 4px 20px rgba(87, 52, 126, 0.05);
@@ -4324,7 +4327,10 @@ fieldset legend {
 :root[data-theme='dark'] .talent-create-card,
 :root[data-theme='dark'] .talent-post-card,
 :root[data-theme='dark'] .talent-side-card,
-:root[data-theme='dark'] .talent-side-card.popular-card {
+:root[data-theme='dark'] .talent-side-card.popular-card,
+:root[data-theme='dark'] .portfolio-card,
+:root[data-theme='dark'] .collab-card,
+:root[data-theme='dark'] .empty-state {
   border-color: rgba(190, 160, 235, 0.18);
   background: #171226 !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
