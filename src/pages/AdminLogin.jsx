@@ -19,7 +19,7 @@ export function AdminLogin({ onAdminSignedIn }) {
     setLoading(true);
     try {
       const result = await signInAdmin(form.email, form.password);
-      onAdminSignedIn?.(result.user, result.profile);
+      onAdminSignedIn?.(result.profile || result.user);
       window.location.hash = 'admin';
     } catch (err) {
       setError(formatAuthError(err));
@@ -32,7 +32,7 @@ export function AdminLogin({ onAdminSignedIn }) {
     setLoading(true);
     try {
       const result = await signInAdmin('admin@svmit.ac.in', 'svm-admin-password');
-      onAdminSignedIn?.(result.user, result.profile);
+      onAdminSignedIn?.(result.profile || result.user);
       window.location.hash = 'admin';
     } catch (err) {
       setError(formatAuthError(err));

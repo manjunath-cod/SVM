@@ -129,21 +129,22 @@ function App() {
   };
 
   const handleUserSignedIn = (user) => {
-    if (user) {
-      setCurrentUser(user);
+    const profile = user?.profile || user;
+    if (profile) {
+      setCurrentUser(profile);
       try {
-        localStorage.setItem('cultureloop-user', JSON.stringify(user));
-        localStorage.setItem('svm_active_session', JSON.stringify(user));
-        localStorage.setItem('cultureloop-user-email', user.email || '');
+        localStorage.setItem('cultureloop-user', JSON.stringify(profile));
+        localStorage.setItem('svm_active_session', JSON.stringify(profile));
+        localStorage.setItem('cultureloop-user-email', profile.email || '');
         localStorage.setItem('cultureloop-session', 'active');
       } catch { /* ignore */ }
 
       // Role and approval routing
-      if (user.role === 'admin') {
+      if (profile.role === 'admin' && profile.approvalStatus === 'approved') {
         window.location.hash = 'admin';
         return;
       }
-      if (user.approvalStatus === 'pending') {
+      if (profile.approvalStatus === 'pending') {
         window.location.hash = 'pending-approval';
         return;
       }

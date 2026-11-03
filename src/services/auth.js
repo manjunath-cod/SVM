@@ -73,6 +73,14 @@ export function formatAuthError(error) {
     return 'Incorrect email or password. Please verify your credentials.';
   }
 
+  if (code === 'auth/profile-not-found' || message.includes('profile was not found')) {
+    return 'Account authenticated, but your user profile was not found in Firestore under users/{auth.uid}. Please complete student registration or contact the coordinator.';
+  }
+
+  if (code === 'auth/network-request-failed' || message.includes('network-request-failed')) {
+    return 'Network connection failed. Please check your internet connection and try again.';
+  }
+
   if (code === 'auth/email-already-in-use') {
     return 'An account with this college email is already registered. Please sign in instead.';
   }
@@ -221,24 +229,24 @@ export async function signInStudent(email, password) {
     const user = credential.user;
 
     const snap = await getDoc(doc(firestore, 'users', user.uid));
-    let profile = snap.exists() ? snap.data() : null;
+    const profile = snap.exists() ? snap.data() : null;
 
     if (!profile) {
-      // First-time fallback profile if document didn't exist
-      profile = {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName || 'SVM Student',
-        role: 'student',
-        approvalStatus: 'pending',
-        createdAt: serverTimestamp()
-      };
-      await setDoc(doc(firestore, 'users', user.uid), profile);
+      const err = new Error('User profile not found in Firestore under users/{auth.uid}.');
+      err.code = 'auth/profile-not-found';
+      throw err;
     }
 
+    const resolvedUser = {
+      ...profile,
+      uid: user.uid,
+      id: user.uid,
+      email: user.email || cleanEmail
+    };
+
     return {
-      user,
-      profile: { ...profile, id: user.uid },
+      user: resolvedUser,
+      profile: resolvedUser,
       approvalStatus: profile.approvalStatus || 'pending',
       role: profile.role || 'student'
     };
@@ -324,7 +332,20 @@ export async function signInAdmin(email, password) {
       throw err;
     }
 
-    return { user, profile: { ...profile, id: user.uid } };
+    const resolvedAdmin = {
+      ...profile,
+      uid: user.uid,
+      id: user.uid,
+      email: user.email || cleanEmail,
+      role: 'admin',
+      approvalStatus: profile.approvalStatus || 'approved'
+    };
+    return {
+      user: resolvedAdmin,
+      profile: resolvedAdmin,
+      role: 'admin',
+      approvalStatus: resolvedAdmin.approvalStatus
+    };
   }
 
   // --- Local Demo Mode Admin Fallback ---

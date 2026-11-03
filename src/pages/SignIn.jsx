@@ -33,8 +33,22 @@ export function SignIn({ onSignedIn }) {
   };
 
   const handleSuccessfulAuth = (result) => {
-    const user = result.user || result;
+    const user = result.profile || result.user || result;
+    const role = result.role || user.role || 'student';
     const approvalStatus = result.approvalStatus || user.approvalStatus || 'approved';
+
+    // Route based on role and approval status
+    if (role === 'admin' && approvalStatus === 'approved') {
+      onSignedIn?.(user);
+      window.location.hash = 'admin';
+      return;
+    }
+
+    if (role === 'student' && approvalStatus === 'approved') {
+      onSignedIn?.(user);
+      window.location.hash = 'dashboard';
+      return;
+    }
 
     if (approvalStatus === 'pending') {
       onSignedIn?.(user);
@@ -48,7 +62,7 @@ export function SignIn({ onSignedIn }) {
     }
 
     onSignedIn?.(user);
-    window.location.hash = 'dashboard';
+    window.location.hash = role === 'admin' ? 'admin' : 'dashboard';
   };
 
   const handleSubmit = async (e) => {
